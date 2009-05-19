@@ -1,0 +1,11 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Catalyst/View/ByCode.pm
+lib/Catalyst/View/ByCode/Helper.pm
+lib/Catalyst/View/ByCode/Markup.pm
+lib/Catalyst/View/ByCode/Template.pm
+lib/Catalyst/View/ByCode/Util.pm
+lib/Catalyst/Helper/View/ByCode.pm
+META.yml

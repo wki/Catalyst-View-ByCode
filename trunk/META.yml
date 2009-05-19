@@ -1,0 +1,36 @@
+---
+name: Catalyst-View-ByCode
+version: 0.01
+author:
+  - 'Wolfgang Kinkeldei <wki@cpan.org>'
+abstract: Templating using pure Perl code
+license: perl
+resources:
+  license: ~
+requires:
+  Catalyst::Runtime: 5.80
+  Test::Builder: 0.86
+  Test::Builder::Tester: 1.18
+  Test::Harness: 3.14
+  Test::More: 0.86
+  perl: 5.8.8
+provides:
+  Catalyst::View::ByCode:
+    file: lib/Catalyst/View/ByCode.pm
+    version: 0.01
+  Catalyst::View::ByCode::Helper:
+    file: lib/Catalyst/View/ByCode/Helper.pm
+    version: 0.10
+  Catalyst::View::ByCode::Markup:
+    file: lib/Catalyst/View/ByCode/Markup.pm
+    version: 0.10
+  Catalyst::View::ByCode::Template:
+    file: lib/Catalyst/View/ByCode/Template.pm
+    version: 0.10
+  Catalyst::View::ByCode::Util:
+    file: lib/Catalyst/View/ByCode/Util.pm
+    version: 0.10
+generated_by: Module::Build version 0.31
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

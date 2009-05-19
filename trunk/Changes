@@ -1,0 +1,8 @@
+Revision history for Catalyst-View-ByCode
+
+0.02    2009-04-26
+        added C::Helper::View::ByCode to allow create-script to work.
+
+0.01    2009-04-25
+        First version, released on an unsuspecting world.
+
