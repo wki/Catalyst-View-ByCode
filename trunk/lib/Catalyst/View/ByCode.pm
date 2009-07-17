@@ -395,6 +395,7 @@ PERL
         #
         # error during compile
         #
+        warn "ERROR: $@";
         $c->log->error(qq/compile error: $@/);
         return; ### FIXME: throwing an error is better
     }

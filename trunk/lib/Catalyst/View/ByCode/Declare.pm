@@ -3,8 +3,8 @@ use strict;
 use warnings;
 
 use Devel::Declare();
-use B::Hooks::EndOfScope;
-use Data::Dump 'dump';
+# use B::Hooks::EndOfScope;
+# use Data::Dump 'dump';
 
 
 ###### Thanks #####################################################
@@ -13,7 +13,7 @@ use Data::Dump 'dump';
 # most of the concepts here are 'borrowed' from this great module #
 # sorry for copying instead of thinking.                          #
 #                                                                 #
-###### /Thanks ####################################################
+#################################################### /Thanks ######
 
 
 our ($Declarator, $Offset);
@@ -34,10 +34,24 @@ sub next_char {
     return substr($linestr, $Offset, 1);
 }
 
+# CURRENTLY NOT NEEDED
+# #
+# # non-destructively read next word (=token)
+# #
+# sub next_word {
+#     skipspace;
+#     
+#     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
+#         my $linestr = Devel::Declare::get_linestr;
+#         return substr($linestr, $Offset, $length);
+#     }
+#     return '';
+# }
+
 #
 # inject something at current position
 #  - with optional length
-#  - plus optional offset
+#  - at optional offset
 # returns thing at inserted position before
 #
 sub inject {
@@ -73,11 +87,10 @@ sub strip_name {
 }
 
 #
-# read a prototype-like definition (in '(...)')
+# read a prototype-like definition (looks like '(...)')
 #
 sub strip_proto {
     if (next_char eq '(') {
-        warn "$Declarator: proto found...";
         my $length = Devel::Declare::toke_scan_str($Offset);
         my $proto = Devel::Declare::get_lex_stuff();
         Devel::Declare::clear_lex_stuff();
@@ -95,30 +108,29 @@ sub inject_if_block {
     my $inject = shift;
     
     if (next_char eq '{') {
-        ### CRASHES!!!
-        warn "must inject: (($inject))";
         inject($inject,0,1);
-        #inject('warn "xx";', 0,1);
         return 1;
     }
     return 0;
 }
 
-#
-# inject something before a '{ ...}' block
-# returns: boolean depending on success
-#
-sub inject_before_block {
-    my $inject = shift;
-    
-    if (next_char eq '{') {
-        inject($inject);
-        return 1;
-    }
-    
-    return 0;
-}
+# CURRENTLY NOT NEEDED
+# #
+# # inject something before a '{ ...}' block
+# # returns: boolean depending on success
+# #
+# sub inject_before_block {
+#     my $inject = shift;
+#     
+#     if (next_char eq '{') {
+#         inject($inject);
+#         return 1;
+#     }
+#     
+#     return 0;
+# }
 
+# CURRENTLY NOT NEEDED
 # #
 # # put modified sub into requested package
 # #
@@ -129,19 +141,19 @@ sub inject_before_block {
 #     Devel::Declare::shadow_sub("$package\::$Declarator", $code);
 # }
 
-#
-# inject something after scope as soon as '}' is reached
-#
-sub inject_scope {
-    on_scope_end {
-        my $linestr = Devel::Declare::get_linestr;
-        my $offset = Devel::Declare::get_linestr_offset;
-        
-        warn "inject_scope: offset=$offset";
-        substr($linestr, $offset, 0) = ';';
-        Devel::Declare::set_linestr($linestr);
-    };
-}
+# CURRENTLY NOT NEEDED
+# #
+# # inject something after scope as soon as '}' is reached
+# #
+# sub inject_scope {
+#     on_scope_end {
+#         my $linestr = Devel::Declare::get_linestr;
+#         my $offset = Devel::Declare::get_linestr_offset;
+#         
+#         substr($linestr, $offset, 0) = ';';
+#         Devel::Declare::set_linestr($linestr);
+#     };
+# }
 
 #
 # generate a tag-parser for a given tag
@@ -152,11 +164,9 @@ sub tag_parser_for {
     return sub {
         local ($Declarator, $Offset) = @_;
         
-        # collect ID and class staff here...
-        my %extras = ();
-        
-        warn "Declarator=$Declarator, Offset=$Offset";
-        # warn "linestr=" . Devel::Declare::get_linestr;
+        # collect ID, class and (...) staff here...
+        # for later injection into top of block
+        my $extras = '';
         
         my $offset_before = $Offset;
         skip_declarator;
@@ -165,21 +175,21 @@ sub tag_parser_for {
         # Don't shadow sub in this case
         return if $Offset == $offset_before;
         
-        if ($Declarator eq 'img') {
-            warn "IMG IMG IMG next char: " . next_char . 'diff = ' . ($Offset - $offset_before);
-        }
-        
         # check for an indentifier (ID)
         if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
             # looks like an ID
-            $extras{id} = strip_name;
+            $extras .= ($extras ? ' ' : '') . "id '" . strip_name . "';";
         }
         
-        # check for '.'
+        # check for '.class' as often as possible
+        my @class;
         while (next_char eq '.') {
             # found '.' -- eliminate it and read name
             inject('',1);
-            push @{$extras{class}}, strip_name;
+            push @class, strip_name;
+        }
+        if (scalar(@class)) {
+            $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
         }
         
         #
@@ -187,25 +197,30 @@ sub tag_parser_for {
         #
         my $proto = strip_proto;
         if ($proto) {
-            %extras = (%extras, eval "($proto)");
+            $extras .= ($extras ? ' ' : '') . "attr $proto;";
         }
         
-        my $extra_text = scalar(keys(%extras)) ? dump(%extras) : '';
-        warn "$Declarator proto: $proto extras: $extra_text";
-        
         #
-        # add a semicolon after the next scope
-        #   - if we found a { ... } block
+        # insert extras into the block
+        # in doubt creating a new one...
         #
-        # or after the last token we found
-        #   - if we did not find a { ... } block
-        #
-        if ($extra_text) {
-            inject_if_block(qq{attr $extra_text;})
-                or inject(qq({attr $extra_text;};));
+        if ($extras) {
+            inject_if_block(qq{$extras;})
+                or inject(qq({$extras;};));
         }
-        inject_if_block("BEGIN { Catalyst::View::ByCode::Declare::inject_scope };")
-            or inject(';');
+        
+        # #
+        # # add a semicolon after the next scope
+        # #   - if we found a { ... } block
+        # #
+        # # or after the last token we found
+        # #   - if we did not find a { ... } block
+        # #
+        # if (next_word !~ m{\A (?:if|unless|while|until|for(?:each)?) \z}xms) {
+        #     # no postfix modifiers found -- save to insert a ";"
+        #     inject_if_block("BEGIN { Catalyst::View::ByCode::Declare::inject_scope };")
+        #         or inject(';');
+        # }
         
         #
         # no shadowing needed - sub already intact

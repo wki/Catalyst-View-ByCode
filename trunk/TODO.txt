@@ -1,3 +1,10 @@
+-1) General
+    - Error handling
+    - Template compilation
+      --> unique file name UUID::Random
+    - no ";" insertion anymore
+      --> allow postfix "if" and "for" modifiers
+      --> postfix modifiers are not recognized...
 
 0) Template file
    
