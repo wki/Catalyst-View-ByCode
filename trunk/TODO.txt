@@ -1,0 +1,110 @@
+
+0) Template file
+   
+   template { ... code ... };
+   # equivalent to:
+   sub RUN { ... }
+
+
+1) Tag changes: (see Markapl.pm)
+
+   div.class { ... code ...};
+   div id { ... code ...};
+   div id.class { ... code ...};
+   
+   # equivalent to:
+   with {...} div {...};
+   div { id 'bla'; class 'foo'; ... };
+   div { attr id => 'bla', class => 'foo'; ...}
+      
+   div (attr => value, ...) { ... code ...};
+   
+   ### add ";" after every Tag in case somebody forgot it -- I always do!
+
+
+2) syntactic Sugar (Devel::Declare):
+
+   # blocks:
+   block something { ... code; yield; ... };
+   block something(a,b) {...}; # a,b are shifted inside sub ?
+   
+   something { ... };
+   something(123,345) {...};
+
+   tag tagname;
+   tag tagname(real_tag_name);
+   empty_tag tagname;
+   empty_tag tagname(real_tag_name);
+
+
+3) Optional:
+   tagset('Module with Tagset');
+
+
+4) or:
+
+Config-Setting:
+   tagset => 'HTML',                   # Catalyst::View::ByCode::TagSet::HTML
+   tagset => '+My::TagSet::XUL'        # wie ueblich
+   include => 'Helper::Standards'      # Application::Helper::Standards
+   include => '+My::Helper::Standards' # wie ueblich
+
+9) example:
+
+block draw_nav {
+    my $id         = shift;
+    my $navigation = shift;
+    my $selected   = shift;
+    
+    return if (!$navigation);
+    
+    ul {
+        class $id;
+        foreach my $nav (@{$navigation}) {
+            li {
+                a(href => nav_uri($nav->parent
+                                ? stash->{selected_navigation}->url_part 
+                                : (), 
+                                $nav->url_part)) {
+                    class 'selected'
+                        if ($selected && $nav->id == $selected->id);
+                    $nav->name_de; ### FIXME -- localize
+                };
+            };
+        }
+    };
+}
+
+template {
+   doctype 'xhtml';
+   html {
+       head {
+           title {stash->{title} || 'Wittmann Ohne Titel'};
+           load Js  => 'site.js';
+           load Css => 'site.css';
+       };
+       body {
+           div header.class.class {
+               a(href => c->uri_for_action('/home')) {
+                   img.logo(src => '/static/images/logo.png');
+               };
+               
+               draw_nav(...);
+           };
+           
+           div content {
+               yield;
+           };
+           
+           div footer {
+               # something
+               
+               
+           };
+       };
+   };
+}
+
+
+
+

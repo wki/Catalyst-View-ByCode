@@ -231,8 +231,8 @@ use warnings;
 use base qw($package);
 
 use Catalyst::View::ByCode qw(:default);
-use HTML::ByCode::Context;
-use HTML::ByCode::Interpolation;
+#use HTML::ByCode::Context;
+#use HTML::ByCode::Interpolation;
 $use_modules
 use $package; # must be the last one -- see import()
 

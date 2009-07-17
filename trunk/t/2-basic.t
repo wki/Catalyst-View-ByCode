@@ -20,11 +20,17 @@ can_ok('main', qw(clear_markup init_markup get_markup markup_object
                   class id on 
                   get_trail set_trail));
 
-#
-# check some HTML-Tags
-#
-can_ok('main', 'div');
-can_ok('main', 'body');
-can_ok('main', 'span');
-can_ok('main', 'h3');
+{
+    package Test;
+    use Test::More;
+    use Catalyst::View::ByCode::Helper qw(:default);
+
+    #
+    # check some HTML-Tags
+    #
+    can_ok('Test', 'div');
+    can_ok('Test', 'body');
+    can_ok('Test', 'span');
+    can_ok('Test', 'h3');
+}
 

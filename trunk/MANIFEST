@@ -3,6 +3,7 @@ MANIFEST
 Makefile.PL
 README
 lib/Catalyst/View/ByCode.pm
+lib/Catalyst/View/ByCode/Declare.pm
 lib/Catalyst/View/ByCode/Helper.pm
 lib/Catalyst/View/ByCode/Markup.pm
 lib/Catalyst/View/ByCode/Template.pm

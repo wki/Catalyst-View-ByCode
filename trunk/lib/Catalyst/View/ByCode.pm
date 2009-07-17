@@ -24,8 +24,11 @@ has wrapper   => (is => 'rw', default => 'wrapper.pl');
 #
 #
 
+use Devel::Declare ();
+
 use Catalyst::View::ByCode::Helper qw(:markup);
 use Catalyst::Utils;
+use File::Temp;
 
 our $VERSION = '0.02';
 
@@ -351,6 +354,7 @@ package $package;
 use strict;
 use warnings;
 
+use Devel::Declare();
 use Catalyst::View::ByCode::Helper qw(:default);
 
 # subs that are overloaded here would warn otherwise
@@ -376,11 +380,17 @@ PERL
     $code .= "\n1;\n";
     
     # $c->log->debug(qq/code: $code/) if $c->debug;
-
+    my $tempfile = "/tmp/compiling-$$.pl";
+    open(my $tmp, '>', $tempfile);
+    print $tmp $code;
+    close($tmp);
+    
     #
     # compile that
     #
-    eval $code;
+    eval "do '$tempfile'";
+    unlink $tempfile;
+    # eval $code;
     if ($@) {
         #
         # error during compile

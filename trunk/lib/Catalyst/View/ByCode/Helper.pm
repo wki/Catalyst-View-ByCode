@@ -5,8 +5,10 @@ use warnings;
 
 use base qw(Exporter);
 
+use Devel::Declare();
 use Catalyst::View::ByCode::Markup;
 use Catalyst::View::ByCode::Util;
+use Catalyst::View::ByCode::Declare;
 use HTML::Tagset;
 use HTML::Entities qw(%entity2char);
 
@@ -521,6 +523,8 @@ sub _construct_functions {
 
     no warnings 'redefine';
 
+    my %declare;
+    
     # empty tags like <br>, <hr> ...
     foreach my $tag_name (grep { m{\A \w}xms }
                           keys(%HTML::Tagset::emptyElement)) {
@@ -528,8 +532,12 @@ sub _construct_functions {
             || $tag_name;
 
         no strict 'refs';
-        *{"$namespace\::$sub_name"} = sub (;@) {
-            _handle_component($tag_name, undef, undef, @_);
+        *{"$namespace\::$sub_name"} = sub (;&@) {
+            my $code = shift; ### testing...
+            _handle_component($tag_name, undef, $code, @_);
+        };
+        $declare{$sub_name} = {
+                const => Catalyst::View::ByCode::Declare::tag_parser_for($sub_name)
         };
     }
 
@@ -545,7 +553,21 @@ sub _construct_functions {
             my $code = shift;
             _handle_component($tag_name, undef, $code, @_);
         };
+        $declare{$sub_name} = {
+            const => Catalyst::View::ByCode::Declare::tag_parser_for($sub_name)
+        };
     }
+    
+    # let Devel::Declare run.
+    Devel::Declare->setup_for($namespace, \%declare);
+    # Devel::Declare->setup_for($namespace, {
+    #     div => {const => Catalyst::View::ByCode::Declare::tag_parser_for(
+    #         'div', $namespace, sub (;&@) {
+    #             my $code = shift;
+    #             _handle_component('div', undef, $code, @_);
+    #         }
+    #     )}
+    # });
     
     # add entities
     foreach my $entity (keys(%entity2char)) {
