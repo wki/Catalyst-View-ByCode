@@ -1002,36 +1002,3 @@ sub prepare_textarea {
 }
 
 1;
-
-__END__
-
-=head1 NAME
-
-HTML::ByCode::Markup - a helper class for HTML::ByCode
-
-=head1 VERSION
-
-Version 0.10
-
-=head1 SEE ALSO
-
-  HTML::ByCode
-    a handler for Apache running modPerl using HTML::ByCode
-
-=head1 BUGS
-
-hopefully, not so many...
-
-=head1 AUTHOR
-
-Wolfgang Kinkeldei, E<lt>wolfgang@kinkeldei.deE<gt>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2007 by Wolfgang Kinkeldei
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.6 or,
-at your option, any later version of Perl 5 you may have available.
-
-=cut

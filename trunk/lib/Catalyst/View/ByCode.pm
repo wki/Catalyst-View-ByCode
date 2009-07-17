@@ -24,13 +24,13 @@ has wrapper   => (is => 'rw', default => 'wrapper.pl');
 #
 #
 
-use Devel::Declare ();
-
 use Catalyst::View::ByCode::Helper qw(:markup);
 use Catalyst::Utils;
-use File::Temp;
+use UUID::Random;
+use Path::Class::File;
+use File::Spec;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
@@ -38,15 +38,14 @@ Catalyst::View::ByCode - Templating using pure Perl code
 
 =head1 SYNOPSIS
 
-    # use the helper to create your View
+    # 1) use the helper to create your View
     myapp_create.pl view ByCode ByCode
 
 
-    # inside your Controllers do business almost as usual:
+    # 2) inside your Controllers do business as usual:
     sub index :Path :Args(0) {
-        my $self = shift;
-        my $c    = shift;
-
+        my ($self, $c) = @_;
+        
         $c->stash->{current_view} = 'ByCode';
         
         $c->stash->{title} = 'Hello ByCode';
@@ -54,17 +53,56 @@ Catalyst::View::ByCode - Templating using pure Perl code
     }
 
 
-    # create a simple view. eg 'root/bycode/hello.pl
-    # REMARK: use 'c' instead of '$c' (!)
+    # 3) create a simple template eg 'root/bycode/hello.pl
+    # REMARK: 
+    #    use 'c' instead of '$c'
+    #    prefer 'stash->{...}' to 'c->stash->{...}'
     html {
         head {
             title { c->stash->{title} };
+            load Js => 'site.js';
+            load Css => 'site.js';
         };
         body {
-            h1 { c->stash->{title} };
-            div { 'hello.pl is running! };
+            div header.noprint {
+                ul.topnav {
+                    li {'home'};
+                    li {'surprise'};
+                };
+            };
+            div content {
+                h1 { c->stash->{title} };
+                div { 'hello.pl is running! };
+                img(src => '/static/images/catalyst_logo.png');
+            };
         };
     };
+    # 266 characters without white space
+    
+    
+    # 4) expect to get this HTML generated:
+    <html>
+      <head>
+        <title>Hello ByCode!</title>
+        <script src="http://localhost:3000/js/site.js" type="text/javascript">
+        </script>
+        <link rel="stylesheet" href="http://localhost:3000/css/site.css" type="text/css" />
+      </head>
+      <body>
+        <div id="header" style="noprint">
+          <ul class="topnav">
+            <li>home</li>
+            <li>surprise</li>
+          </ul>
+        </div>
+        <div class="content">
+          <h1>Hello ByCode!</h1>
+          <div>hello.pl is running!</div>
+          <img src="/static/images/catalyst_logo.png" />
+        </div>
+      </body>
+    </html>
+    # 453 characters without white space
 
 =head1 DESCRIPTION
 
@@ -87,10 +125,6 @@ A simple configuration of a dereived Controller could look like this:
 
 =head1 METHODS
 
-=head2 BUILD
-
-constructor for this Moose-driven class
-
 =cut
 
 sub BUILD {
@@ -110,9 +144,34 @@ sub BUILD {
     }
 }
 
+#
+# intercept dies and correct
+#  - file-name to template
+#  - line-number by subtracting top-added part
+#
+sub _handle_die {
+    my $msg = shift;
+    die $msg if (ref($msg)); # exceptions will forward...
+    
+    my $package = caller();
+    my ($start, $file, $line) = ($msg =~ m{\A (.+ \s at) \s (/.+)\s+ line \s+ (\d+) \.? \s* \z}xmsg);
+    
+    no strict 'refs';
+    if ($file && $file eq ${"$package\::_tempfile"}) {
+        $line -= ${"$package\::_offset"};
+        my $template = $package;
+        $template =~ s{\A .+ :: Template}{}xms;
+        $template =~ s{::}{/}xmsg;
+        
+        $msg = "$start Template:$template line $line.\n";
+    }
+    
+    die $msg;
+}
+
 =head2 process
 
-fulfull the request
+fulfill the request (called from Catalyst)
 
 =cut
 
@@ -120,8 +179,6 @@ sub process {
     my $self = shift;
     my $c = shift;
     
-    #$c->log->debug('Processing ByCode...') if $c->debug;
-
     #
     # must render - find template and wrapper
     #
@@ -153,10 +210,10 @@ sub process {
         if ($path && ($sub = $self->_compile_template($c, $path))) {
             unshift @yield_list, $sub;
         } else {
-            $c->log->warn("wrapper '$wrapper' not found or not compilable");
+            $c->log->error("wrapper '$wrapper' not found or not compilable");
         }
     } else {
-        $c->log->debug('no wrapper wanted') if $c->debug;
+        $c->log->info('no wrapper wanted') if $c->debug;
     }
 
     #
@@ -165,14 +222,16 @@ sub process {
     $c->stash->{yield} ||= {};
     $c->stash->{yield_list} = \@yield_list;
     init_markup($self, $c);
-    # $self->render($c, $template, {});
-    Catalyst::View::ByCode::Helper::yield; # let automatism work :-)
+    {
+        local $SIG{__DIE__} = \&_handle_die;
+        Catalyst::View::ByCode::Helper::yield; # let automatism work :-)
+    };
     my $output = get_markup();
     clear_markup;
     
     $c->response->body($output);
     
-    return 1;
+    return 1; # indicate success
 }
 
 =head2 render
@@ -221,20 +280,15 @@ sub _find_template {
     my $template = shift;  # relative path
     my $start_dir = shift || '';
     
-    #$c->log->debug("_find_template '$template' running...") if $c->debug;
-    
     my $root_dir = $self->root_dir;
     my $ext = $self->extension;
     $ext =~ s{\A \.+}{}xms;
     while (1) {
-        #$c->log->debug("_find_template :: $root_dir/$start_dir/$template (.$ext)") if $c->debug;
         if (-f "$root_dir/$start_dir/$template") {
             # we found it
-            #$c->log->debug("FOUND template :: $root_dir/$start_dir/$template") if $c->debug;
             return $start_dir ? "$start_dir/$template" : $template;
         } elsif (-f "$root_dir/$start_dir/$template.$ext") {
-            # we found it
-            #$c->log->debug("FOUND template :: $root_dir/$start_dir/$template.$ext") if $c->debug;
+            # we found it after appending extension
             return $start_dir ? "$start_dir/$template.$ext" : "$template.$ext";
         }
         last if (!$start_dir);
@@ -370,6 +424,7 @@ PERL
         $code .= "$file_contents;\n";
     } else {
         # create a sub around our file
+        $header_lines++;
         $code .= <<PERL;
 sub RUN {
 $file_contents;
@@ -379,14 +434,18 @@ PERL
     }
     $code .= "\n1;\n";
     
-    # $c->log->debug(qq/code: $code/) if $c->debug;
-    my $tempfile = "/tmp/compiling-$$.pl";
+    # my $tempfile = "/tmp/compiling-$$.pl";
+    my $tempfile = Path::Class::File->new(File::Spec->tmpdir,
+                                          UUID::Random::generate . '.pl');
+    warn "tempfile = $tempfile";
     open(my $tmp, '>', $tempfile);
     print $tmp $code;
     close($tmp);
     
     #
     # compile that
+    # Devel::Declare does not work well with eval()'ed code...
+    #                thus, we need to save into a file
     #
     eval "do '$tempfile'";
     unlink $tempfile;
@@ -405,8 +464,9 @@ PERL
     #
     no strict 'refs';
     ${"$package\::_filename"} = $path;
-    ${"$package\::_offset"} = $header_lines;
-    ${"$package\::_mtime"} = $mtime;
+    ${"$package\::_offset"}   = $header_lines;
+    ${"$package\::_mtime"}    = $mtime;
+    ${"$package\::_tempfile"} = "$tempfile";
     use strict 'refs';
 
     #

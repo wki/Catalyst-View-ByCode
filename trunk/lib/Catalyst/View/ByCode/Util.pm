@@ -15,8 +15,6 @@ our @EXPORT = qw(make_hashref
                  encode_64 decode_64
                  find_sub_in_callers);
 
-our $VERSION = '0.10';
-
 #
 # make a hashref from almost anything
 #
