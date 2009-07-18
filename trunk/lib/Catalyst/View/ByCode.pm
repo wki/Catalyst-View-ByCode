@@ -106,7 +106,156 @@ Catalyst::View::ByCode - Templating using pure Perl code
 
 =head1 DESCRIPTION
 
-Simple templating just with Perl.
+C<Catalyst::View::ByCode> tries to offer an efficient, fast and robust
+solution for generating HTML and XHTML markup using standard perl code
+encapsulating all nesting into code blocks.
+
+Instead of typing opening and closing HTML-Tags we simply call a
+sub named like the tag we want to generate:
+
+    div { 'hello' }
+    
+generates:
+
+    <div>hello</div>
+
+There is no templating language you will have to learn, no quirks with
+different syntax rules your editor might not correctly follow and no
+indentation problems.
+
+The whole markup is initially constructed as a huge tree-like
+structure in memory keeping every reference as long as possible to
+allow greatest flexibility and enable deferred construction of every
+building block until the markup is actially requested.
+
+Every part of the markup can use almost every type of data with some
+reasonable behavior during markup generation.
+
+=head2 Tags
+
+Every tag known in HTML (or defined in L<HTML::Tagset> to be precise) gets
+exported to a template's namespace during its compilation and can be used as
+expected. However, there are some exceptions which would collide with CORE
+subs or operators
+
+=over 12
+
+=item choice
+
+generates a E<lt>selectE<gt> tag
+
+=item link_tag
+
+generates a E<lt>linkE<gt> tag
+
+=item trow
+
+generates a E<lt>trE<gt> tag
+
+=item tcol
+
+generates a E<lt>tdE<gt> tag
+
+=item subscript
+
+generates a E<lt>subE<gt> tag
+
+=item superscript
+
+generates a E<lt>supE<gt> tag
+
+=back
+
+Internally, every tag subroutine is defined with a prototype like
+
+    sub div(;&@) { ... }
+
+Thus, the first argument of this sub is expected to be a coderef, which allows
+to write code like the examples above. Nesting tags is just a matter of
+nesting calls into blocks.
+
+=head2 Content
+
+There are several ways to generate content which is inserted between the
+opening and the closing tag:
+
+=over
+
+=item
+
+The return value of the last expression of a code block will get appended to
+the content inside the tag. The content will get escaped when needed.
+
+=item
+
+To append any content (getting escaped) at any point of the markup generation,
+the C<OUT> glob can be used:
+
+    print OUT 'some content here.';
+
+=item
+
+To append unescaped content eg JavaScript or the content of another
+markup-generating subsystem like C<HTML::FormFu> simple use the <RAW> glob:
+
+    print RAW '<?xxx must be here for internal reasons ?>';
+
+=head2 Attributes
+
+As usual for Perl, there is always more than one way to do it:
+
+=over
+
+=item prefixing or appending
+
+Every tag may get prefixed or appended by a C<with> method containing all
+attributes that should go into the opening tag.
+
+    # prefixing
+    with {id => 'top', 
+          class => 'noprint silver', 
+          style => 'display: none'} div {'content'};
+    
+    # prefixing using other data types
+    with {id => 'top', 
+          class => [qw(noprint silver)], 
+          style => {display => 'none'}} div {'content'};
+    
+    # using 'with' more than once
+    with {id => 'top'}
+    with {class => 'noprint silver'}
+    div {'content'}
+    with {style => 'display: none'};
+    
+    # always generates this:
+    <div id="top" class="noprint silver" style="display: none">content</div>
+
+=item special content
+
+    # using special methods
+    div {
+        id 'top';
+        class 'noprint silver';
+        attr style => 'display: none';
+        
+        'content'
+    };
+
+=item tricky arguments
+
+    div top.noprint.silver(style => 'display none') {'content'}
+
+=back
+
+=head2 Special Methods
+
+=over
+
+=item doctype
+
+=item load
+
+=back
 
 =head1 CONFIGURATION
 
@@ -425,23 +574,8 @@ PERL
     # count lines created so far (@lines added to avoid warnings)
     my $header_lines = scalar(my @lines = split(/\n/, $code));
 
-    # create magic sub 'RUN' unless defined in source
-    if ($file_contents =~ m{\b sub \s+ RUN \s* \{}xms) {
-        # sub is defined in source -- no sub around file
-        $code .= "$file_contents;\n";
-    } else {
-        # create a sub around our file
-        $header_lines++;
-        $code .= <<PERL;
-sub RUN {
-$file_contents;
-return;
-}
-PERL
-    }
-    $code .= "\n1;\n";
+    $code .= "\n$file_contents;\n\n1;\n";
     
-    # my $tempfile = "/tmp/compiling-$$.pl";
     my $tempfile = Path::Class::File->new(File::Spec->tmpdir,
                                           UUID::Random::generate . '.pl');
     warn "tempfile = $tempfile";

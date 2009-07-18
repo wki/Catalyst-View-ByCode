@@ -15,7 +15,6 @@ use HTML::Entities qw(%entity2char);
 our $DEBUG   = 1;
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
                      doctype
-                     template
                      load
                      yield
                      with fill using employ
@@ -248,11 +247,6 @@ sub yield(;*@) {
 
     return;
 }
-
-#
-# easy template generation
-#
-sub template(;&) {}
 
 #
 # routines for collecting various things
@@ -550,11 +544,6 @@ sub _construct_functions {
             const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
-    
-    # make template() work
-    $declare{template} = {
-        const => Catalyst::View::ByCode::Declare::template_parser
-    };
     
     # install all tag-parsers collected above
     Devel::Declare->setup_for($namespace, \%declare);

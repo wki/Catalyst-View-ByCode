@@ -226,23 +226,23 @@ sub tag_parser {
     };
 }
 
-# #
-# # generate a block-parser
-# # initiated after compiling 'block'
-# # parses: 'block'   name   id?   ('.' class)*   ( '(' .* ')' )?
-# # injects 'sub' instead of 'block'
-# #
-# sub block_parser {
-#     return sub {
-#         local ($Declarator, $Offset) = @_;
-#         my $inject_position = $Offset;
-#         return if (declarator_is_hash_key);
-#         
-#         inject('sub', $Offset - $inject_position, $inject_position);
-#         
-#         parse_declaration;
-#     };
-# }
+#
+# generate a block-parser
+# initiated after compiling 'block'
+# parses: 'block'   name   id?   ('.' class)*   ( '(' .* ')' )?
+# injects 'sub' instead of 'block'
+#
+sub block_parser {
+    return sub {
+        local ($Declarator, $Offset) = @_;
+        my $inject_position = $Offset;
+        return if (declarator_is_hash_key);
+        
+        inject('sub', $Offset - $inject_position, $inject_position);
+        
+        parse_declaration;
+    };
+}
 
 #
 # idea: replace 'template' by 'sub RUN'
@@ -251,13 +251,13 @@ sub tag_parser {
 sub template_parser {
     return sub {
         local ($Declarator, $Offset) = @_;
-        my $inject_position = $Offset;
+        #my $inject_position = $Offset;
         # return if (declarator_is_hash_key);
         #skip_declarator;
-        
-        warn "Template. Start=$inject_position, Offset=$Offset";
+        my $linestr = Devel::Declare::get_linestr;
+        warn "Template. Offset=$Offset, source = " . substr($linestr, $Offset, 10);
 
-        inject('sub RUN', 8);
+        inject('; sub RUN', 8);
     }
 }
 1;
