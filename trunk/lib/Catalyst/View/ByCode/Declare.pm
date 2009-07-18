@@ -15,7 +15,7 @@ use Devel::Declare();
 #                                                                 #
 #################################################### /Thanks ######
 
-
+# these variables will get local()'ized during a parser run
 our ($Declarator, $Offset);
 
 #
@@ -156,76 +156,108 @@ sub inject_if_block {
 # }
 
 #
-# generate a tag-parser for a given tag
+# helper: check if a declarator is in a hash key
 #
-sub tag_parser_for {
-    my ($tag) = @_;
+sub declarator_is_hash_key {
+    my $offset_before = $Offset;
+    skip_declarator;
     
+    # This means that current declarator is in a hash key.
+    # Don't shadow sub in this case
+    return ($Offset == $offset_before);
+}
+
+#
+# parse: id?   ('.' class)*   ( '(' .* ')' )?
+#
+sub parse_declaration {
+    # collect ID, class and (...) staff here...
+    # for later injection into top of block
+    my $extras = '';
+    
+    # check for an indentifier (ID)
+    if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
+        # looks like an ID
+        $extras .= ($extras ? ' ' : '') . "id '" . strip_name . "';";
+    }
+    
+    # check for '.class' as often as possible
+    my @class;
+    while (next_char eq '.') {
+        # found '.' -- eliminate it and read name
+        inject('',1);
+        push @class, strip_name;
+    }
+    if (scalar(@class)) {
+        $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
+    }
+    
+    #
+    # see if we have (...) stuff
+    #
+    my $proto = strip_proto;
+    if ($proto) {
+        $extras .= ($extras ? ' ' : '') . "attr $proto;";
+    }
+    
+    #
+    # insert extras into the block
+    # in doubt creating a new one...
+    #
+    if ($extras) {
+        inject_if_block(qq{$extras;})
+            or inject(qq({$extras;};));
+    }
+}
+
+####################################### PARSERs
+#
+# generate a tag-parser
+# initiated after compiling a tag subroutine
+# parses: tag   id?   ('.' class)*   ( '(' .* ')' )?
+# injects some magic into the block following the declaration
+#
+sub tag_parser {
     return sub {
         local ($Declarator, $Offset) = @_;
+        return if (declarator_is_hash_key);
         
-        # collect ID, class and (...) staff here...
-        # for later injection into top of block
-        my $extras = '';
-        
-        my $offset_before = $Offset;
-        skip_declarator;
-        
-        # This means that current declarator is in a hash key.
-        # Don't shadow sub in this case
-        return if $Offset == $offset_before;
-        
-        # check for an indentifier (ID)
-        if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
-            # looks like an ID
-            $extras .= ($extras ? ' ' : '') . "id '" . strip_name . "';";
-        }
-        
-        # check for '.class' as often as possible
-        my @class;
-        while (next_char eq '.') {
-            # found '.' -- eliminate it and read name
-            inject('',1);
-            push @class, strip_name;
-        }
-        if (scalar(@class)) {
-            $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
-        }
-        
-        #
-        # see if we have (...) stuff
-        #
-        my $proto = strip_proto;
-        if ($proto) {
-            $extras .= ($extras ? ' ' : '') . "attr $proto;";
-        }
-        
-        #
-        # insert extras into the block
-        # in doubt creating a new one...
-        #
-        if ($extras) {
-            inject_if_block(qq{$extras;})
-                or inject(qq({$extras;};));
-        }
-        
-        # #
-        # # add a semicolon after the next scope
-        # #   - if we found a { ... } block
-        # #
-        # # or after the last token we found
-        # #   - if we did not find a { ... } block
-        # #
-        # if (next_word !~ m{\A (?:if|unless|while|until|for(?:each)?) \z}xms) {
-        #     # no postfix modifiers found -- save to insert a ";"
-        #     inject_if_block("BEGIN { Catalyst::View::ByCode::Declare::inject_scope };")
-        #         or inject(';');
-        # }
-        
-        #
-        # no shadowing needed - sub already intact
-        #
+        parse_declaration;
     };
 }
 
+# #
+# # generate a block-parser
+# # initiated after compiling 'block'
+# # parses: 'block'   name   id?   ('.' class)*   ( '(' .* ')' )?
+# # injects 'sub' instead of 'block'
+# #
+# sub block_parser {
+#     return sub {
+#         local ($Declarator, $Offset) = @_;
+#         my $inject_position = $Offset;
+#         return if (declarator_is_hash_key);
+#         
+#         inject('sub', $Offset - $inject_position, $inject_position);
+#         
+#         parse_declaration;
+#     };
+# }
+
+#
+# idea: replace 'template' by 'sub RUN'
+# does not work yet...
+#
+sub template_parser {
+    return sub {
+        local ($Declarator, $Offset) = @_;
+        my $inject_position = $Offset;
+        # return if (declarator_is_hash_key);
+        #skip_declarator;
+        
+        warn "Template. Start=$inject_position, Offset=$Offset";
+
+        inject('sub RUN', 8);
+    }
+}
 1;

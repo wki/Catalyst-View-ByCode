@@ -15,6 +15,7 @@ use HTML::Entities qw(%entity2char);
 our $DEBUG   = 1;
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
                      doctype
+                     template
                      load
                      yield
                      with fill using employ
@@ -217,9 +218,6 @@ sub yield(;*@) {
     
     $c->log->debug("yield '$yield_name' executing...") if ($c->debug);
 
-    # $c->log->debug("yield :: c= $c, stash=" . join(',', keys(%{$c->stash})) );
-
-    # my $self = $c->stash->{current_view_instance};
     my $sub;
     if (ref($yield_name) eq 'CODE') {
         $sub = $yield_name;
@@ -246,13 +244,15 @@ sub yield(;*@) {
                || caller->can($yield_name);
     }
 
-    # $c->log->debug("yield :: sub=$sub");
     $sub->(@_) if ($sub && ref($sub) eq 'CODE');
-
-    # $c->log->debug("yield '$yield_name' done.");
 
     return;
 }
+
+#
+# easy template generation
+#
+sub template(;&) {}
 
 #
 # routines for collecting various things
@@ -281,7 +281,6 @@ sub apply(&;@) { _handle_component(undef, undef, @_); }
 # set attribute(s) of latest open tag (instead of 'with' outside)
 #
 sub attr {
-    #_check_markup();
     $markup->attr(make_hashref(@_));
 }
 
@@ -289,7 +288,6 @@ sub attr {
 # set data for latest open tag (instead of 'using' outside)
 #
 sub data {
-    #_check_markup();
     $markup->data(make_hashref(@_));
 }
 
@@ -300,7 +298,6 @@ sub set_global_data {
     my $id = shift;
     my $data = shift;
 
-    #_check_markup();
     $markup->set_data($id, $data);
 }
 
@@ -308,7 +305,6 @@ sub set_global_data {
 # set a class inside a tag
 #
 sub class {
-    #_check_markup();
     $markup->attr({class => ref($_[0]) eq 'ARRAY' ? shift : [@_]});
 }
 
@@ -316,7 +312,6 @@ sub class {
 # set an ID
 #
 sub id {
-    #_check_markup();
     $markup->attr({id => shift});
 }
 
@@ -326,7 +321,6 @@ sub id {
 sub on {
     my $handler = shift;
 
-    #_check_markup();
     $markup->attr({"on$handler" => [@_]});
 }
 
@@ -336,7 +330,6 @@ sub on {
 sub get_trail {
     my $selector = shift;
 
-    #_check_markup();
     return $markup->get_trail($selector);
 }
 
@@ -346,7 +339,6 @@ sub get_trail {
 sub set_trail {
     my $trail = shift;
 
-    #_check_markup();
     $markup->set_trail($trail);
 }
 
@@ -390,8 +382,6 @@ sub doctype {
         xhtml1_trans => q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" } .
                         q{"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">},
     );
-
-    #_check_markup();
 
     my $doctype = 'default';
     foreach my $d (@doctype_finder) {
@@ -462,7 +452,6 @@ sub _entity {
     }
 
     # void context - just print
-    #_check_markup();
     $markup->add_content($char);
     return;
 }
@@ -504,7 +493,6 @@ sub _handle_component {
     return $element if ((caller(1))[5]); # we want an array: let first execute
 
     # we are first and must execute
-    #_check_markup();
     $markup->add_content($element);
 }
 
@@ -525,49 +513,51 @@ sub _construct_functions {
 
     my %declare;
     
-    # empty tags like <br>, <hr> ...
-    foreach my $tag_name (grep { m{\A \w}xms }
-                          keys(%HTML::Tagset::emptyElement)) {
-        my $sub_name = $change_tags{$tag_name}
-            || $tag_name;
+    # # empty tags like <br>, <hr> ...
+    # foreach my $tag_name (grep { m{\A \w}xms }
+    #                       keys(%HTML::Tagset::emptyElement)) {
+    #     my $sub_name = $change_tags{$tag_name}
+    #         || $tag_name;
+    # 
+    #     no strict 'refs';
+    #     *{"$namespace\::$sub_name"} = sub (;&@) {
+    #         my $code = shift; ### testing...
+    #         _handle_component($tag_name, undef, $code, @_);
+    #     };
+    #     $declare{$sub_name} = {
+    #             const => Catalyst::View::ByCode::Declare::tag_parser_for($sub_name)
+    #     };
+    # }
+    # 
 
-        no strict 'refs';
-        *{"$namespace\::$sub_name"} = sub (;&@) {
-            my $code = shift; ### testing...
-            _handle_component($tag_name, undef, $code, @_);
-        };
-        $declare{$sub_name} = {
-                const => Catalyst::View::ByCode::Declare::tag_parser_for($sub_name)
-        };
-    }
-
-    # tags with content
-    foreach my $tag_name (grep { m{\A \w}xms &&
-                                 !exists($HTML::Tagset::emptyElement{$_}) }
+    # tags with content are treated the same as tags without content
+    foreach my $tag_name (grep { m{\A \w}xms } #&&
+                                 # !exists($HTML::Tagset::emptyElement{$_}) }
                           keys(%HTML::Tagset::isKnown)) {
         my $sub_name = $change_tags{$tag_name}
             || $tag_name;
 
+        # install a tag-named sub in caller's namespace
         no strict 'refs';
         *{"$namespace\::$sub_name"} = sub (;&@) {
             my $code = shift;
             _handle_component($tag_name, undef, $code, @_);
         };
+        use strict 'refs';
+        
+        # remember me to generate a magic tag-parser that applies extra magic
         $declare{$sub_name} = {
-            const => Catalyst::View::ByCode::Declare::tag_parser_for($sub_name)
+            const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
     
-    # let Devel::Declare run.
+    # make template() work
+    $declare{template} = {
+        const => Catalyst::View::ByCode::Declare::template_parser
+    };
+    
+    # install all tag-parsers collected above
     Devel::Declare->setup_for($namespace, \%declare);
-    # Devel::Declare->setup_for($namespace, {
-    #     div => {const => Catalyst::View::ByCode::Declare::tag_parser_for(
-    #         'div', $namespace, sub (;&@) {
-    #             my $code = shift;
-    #             _handle_component('div', undef, $code, @_);
-    #         }
-    #     )}
-    # });
     
     # add entities
     foreach my $entity (keys(%entity2char)) {

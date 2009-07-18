@@ -223,8 +223,15 @@ sub process {
     $c->stash->{yield_list} = \@yield_list;
     init_markup($self, $c);
     {
+        #
+        # beautify dies by replacing our strange file names
+        # with the relative path of the wrapper
+        #
         local $SIG{__DIE__} = \&_handle_die;
-        Catalyst::View::ByCode::Helper::yield; # let automatism work :-)
+        #
+        # let automatism work thru the yield-list
+        #
+        Catalyst::View::ByCode::Helper::yield;
     };
     my $output = get_markup();
     clear_markup;
