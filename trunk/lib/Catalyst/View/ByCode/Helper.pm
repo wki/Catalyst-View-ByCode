@@ -11,6 +11,7 @@ use Catalyst::View::ByCode::Util;
 use Catalyst::View::ByCode::Declare;
 use HTML::Tagset;
 use HTML::Entities qw(%entity2char);
+use Scalar::Util 'weaken';
 
 our $DEBUG   = 1;
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
@@ -32,21 +33,21 @@ our %EXPORT_TAGS = (
 #
 # define variables
 #
-my $markup; # initialized with 'init_markup',
+our $markup; # initialized with 'init_markup',
             # doing this during 'import' could be bad
-my $stash;  # current stash
-my $c;      # current context
-my $view;   # ByCode View instance
+our $stash;  # current stash
+our $c;      # current context
+our $view;   # ByCode View instance
 
 #
 # some tags get changed by simply renaming them
 #
-my %change_tags = ('select' => 'choice',
-                   'link'   => 'link_tag',
-                   'tr'     => 'trow',
-                   'td'     => 'tcol',
-                   'sub'    => 'subscript',
-                   'sup'    => 'superscript',
+our %change_tags = ('select' => 'choice',
+                    'link'   => 'link_tag',
+                    'tr'     => 'trow',
+                    'td'     => 'tcol',
+                    'sub'    => 'subscript',
+                    'sup'    => 'superscript',
                );
 
 ######################################## IMPORT
@@ -463,7 +464,9 @@ sub _handle_component {
         : { tag => undef, 
             attr => {}, data => {}, callback => {}, 
             content => [], code => undef };
-
+    weaken $element;
+    weaken $code if ($code);
+    
     if ($tag) {
         #
         # add a tag

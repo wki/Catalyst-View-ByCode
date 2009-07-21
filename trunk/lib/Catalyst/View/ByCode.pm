@@ -563,6 +563,7 @@ sub __compile {
 package $package;
 use strict;
 use warnings;
+use utf8;
 
 use Devel::Declare();
 use Catalyst::View::ByCode::Helper qw(:default);
@@ -589,7 +590,7 @@ PERL
     #                thus, we need to save into a file
     #
     eval "do '$tempfile'";
-    unlink $tempfile;
+    #unlink $tempfile;
     # eval $code;
     if ($@) {
         #

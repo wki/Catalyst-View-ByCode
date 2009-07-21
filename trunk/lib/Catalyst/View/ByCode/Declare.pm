@@ -197,6 +197,8 @@ sub parse_declaration {
     #
     my $proto = strip_proto;
     if ($proto) {
+        ### FIXME: multiline (...) things will otherwise fail
+        $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
         $extras .= ($extras ? ' ' : '') . "attr $proto;";
     }
     
