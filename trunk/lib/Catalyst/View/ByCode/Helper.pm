@@ -11,7 +11,6 @@ use Catalyst::View::ByCode::Util;
 use Catalyst::View::ByCode::Declare;
 use HTML::Tagset;
 use HTML::Entities qw(%entity2char);
-use Scalar::Util 'weaken';
 
 our $DEBUG   = 1;
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
@@ -393,6 +392,7 @@ sub doctype {
 # get all Markup (HTML/XML) as text
 #
 sub get_markup {
+    #return find_cycle($markup);
     return $markup ? $markup->as_text() : undef;
 }
 
@@ -400,6 +400,7 @@ sub get_markup {
 # erase all markup
 #
 sub clear_markup {
+    $markup->DESTROY();
     undef $markup;
     undef $c;
     undef $stash;
@@ -464,8 +465,6 @@ sub _handle_component {
         : { tag => undef, 
             attr => {}, data => {}, callback => {}, 
             content => [], code => undef };
-    weaken $element;
-    weaken $code if ($code);
     
     if ($tag) {
         #

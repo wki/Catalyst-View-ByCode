@@ -6,7 +6,6 @@ use warnings;
 use Catalyst::View::ByCode::Util;
 use HTML::Tagset;
 use List::Util qw(max);
-use Scalar::Util 'weaken';
 
 #
 # define break positions
@@ -48,7 +47,6 @@ sub new {
     $self->{global_data}   = {};    # data for a tag having id='ID'
     $self->{load}          = {};    # reference to 'load' tags
 
-    weaken $self;
     return $self;
 }
 
@@ -144,7 +142,6 @@ sub open_tag {
                     data    => undef,
                     content => [@_],
                   };
-    weaken $element;
     push @{$self->{open_elements}}, $self->{last_element};
     push @{$self->{last_element}->{content}}, $element;
     $self->{last_element} = $element;

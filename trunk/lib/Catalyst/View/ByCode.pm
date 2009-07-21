@@ -6,11 +6,13 @@ extends 'Catalyst::View';
 has extension => (is => 'rw', default => '.pl');
 has root_dir  => (is => 'rw', default => 'bycode');
 has wrapper   => (is => 'rw', default => 'wrapper.pl');
+has include   => (is => 'rw', default => sub { [] });
 
 # Config Options:
 #    root_dir => 'bycode',
 #    extension => '.pl',
 #    wrapper => 'wrapper.pl', # will be overridden by stash{wrapper}
+#    include => [...] -- packages to use in every template
 #
 # Stash Variables:
 #    template => 'path/to/template'
@@ -553,6 +555,7 @@ sub __compile {
     #
     # build some magic code around the template's code
     #
+    my $include = join("\n", map {"use $_;"} @{$self->include});
     my $now = localtime(time);
     my $mtime = (stat($path))[9];
     my $code = <<PERL;
@@ -567,7 +570,7 @@ use utf8;
 
 use Devel::Declare();
 use Catalyst::View::ByCode::Helper qw(:default);
-
+$include
 # subs that are overloaded here would warn otherwise
 no warnings 'redefine';
 PERL
@@ -587,16 +590,15 @@ PERL
     #
     # compile that
     # Devel::Declare does not work well with eval()'ed code...
-    #                thus, we need to save into a file
+    #                thus, we need to save into a TEMP-file
     #
     eval "do '$tempfile'";
-    #unlink $tempfile;
-    # eval $code;
+    unlink $tempfile;
     if ($@) {
         #
         # error during compile
         #
-        warn "ERROR: $@";
+        # warn "ERROR: $@";
         $c->log->error(qq/compile error: $@/);
         return; ### FIXME: throwing an error is better
     }
