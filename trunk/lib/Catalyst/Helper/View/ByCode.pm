@@ -57,7 +57,7 @@ __PACKAGE__->config(
     # extension => '.pl',
     # 
     # # Set the location for .pl files
-    # root_dir => cat_app->path_to( 'root', 'bycode' ),
+    # root_dir => [% app %]->path_to( 'root', 'bycode' ),
     # 
     # # This is your wrapper template located in the 'root/src'
     # wrapper => 'wrapper.pl',

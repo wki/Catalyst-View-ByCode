@@ -4,7 +4,7 @@ use Moose;
 extends 'Catalyst::View';
 
 has extension => (is => 'rw', default => '.pl');
-has root_dir  => (is => 'rw', default => 'bycode');
+has root_dir  => (is => 'rw', default => 'root/bycode');
 has wrapper   => (is => 'rw', default => 'wrapper.pl');
 has include   => (is => 'rw', default => sub { [] });
 
@@ -531,7 +531,7 @@ sub __compile {
     my $path = shift;
     my $package = shift;
 
-    $c->log->debug("compile template :: $path --> $package") if $c->debug;
+    $c->log->debug("compile template :: $path --> $package") if ($c->debug);
     
     #
     # clear target package's namespace before we start
@@ -582,7 +582,7 @@ PERL
     
     my $tempfile = Path::Class::File->new(File::Spec->tmpdir,
                                           UUID::Random::generate . '.pl');
-    warn "tempfile = $tempfile";
+    $c->log->debug("tempfile = $tempfile") if ($c->debug);
     open(my $tmp, '>', $tempfile);
     print $tmp $code;
     close($tmp);
