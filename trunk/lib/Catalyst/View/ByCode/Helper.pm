@@ -13,8 +13,8 @@ use HTML::Tagset;
 use HTML::Entities qw(%entity2char);
 
 our $DEBUG   = 1;
-our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
-                     doctype
+our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
+our @EXPORT     = qw(doctype
                      load
                      yield
                      with fill using employ
@@ -23,10 +23,10 @@ our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object
                      apply
                      class id on
                      get_trail set_trail
-                     stash c);
+                     stash c _);
 our %EXPORT_TAGS = (
     markup  => [qw(clear_markup init_markup get_markup markup_object)],
-    default => [@EXPORT_OK],
+    default => [@EXPORT, @EXPORT_OK],
 );
 
 #
@@ -78,7 +78,7 @@ sub import {
     #   'print OUT' works, Components use a 'select OUT' to allow 'print' alone
     #
     no strict 'refs';
-    if ($default_export) {
+    if ($default_export || !scalar(@_)) {
         tie *{"$calling_package\::OUT"}, $module, 1; # escaped:   OUT
         tie *{"$calling_package\::RAW"}, $module, 0; # unescaped: RAW
         tie *{"$calling_package\::STDOUT"}, $module, 1; # escaped: STDOUT
@@ -385,6 +385,14 @@ sub doctype {
         }
     }
     $markup->add_raw($doctype_for{$doctype});
+}
+
+######################################## Locale stuff
+#
+# get a localized version of something
+#
+sub _ {
+    return $c->localize(@_);
 }
 
 ######################################## MARKUP ACCESS

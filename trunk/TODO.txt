@@ -1,84 +1,105 @@
--1) General
-    - Error handling
-    - Template compilation
-      --> unique file name UUID::Random
-    - no ";" insertion anymore
-      --> allow postfix "if" and "for" modifiers
-      --> postfix modifiers are not recognized...
+Changes C::V::ByCode
 
 0) Template file
-   
-   template { ... code ... };
-   # equivalent to:
-   sub RUN { ... }
+    - sub template(&);
+    - template { ... code ... };
+      # equivalent to:
+      sub RUN { ... }
 
 
-1) Tag changes: (see Markapl.pm)
+1) new way defining tags
+    - sub C::V::B::Helper::tag;
+    - tag 'sub_name', 'real_tag_name';
+      add 'sub_name' to @EXPORT, $EXPORT_TAGS{default}
+    - creates:
+      sub sub_name(;&@) {
+          my $code = $_[0];
+          my $attr = ref($_[1]) eq 'HASH' ? $_[1] : {};
+          
+          # open tag 'real_tag_name' / $attr
+          $markup->add_content($code->($attr)) if ($code);
+          # close tag
+      }
+    
+    - native way of calling:
+      div { 
+          my $attr = shift; # optional
+          ... content ... 
+      } {attr_name => attr_value, ...};
+    
+    - Devel::Declare'd way of calling:
+      div id.class(attr_name => attr_value, ...) { ... content ...};
 
-   div.class { ... code ...};
-   div id { ... code ...};
-   div id.class { ... code ...};
-   
-   # equivalent to:
-   with {...} div {...};
-   div { id 'bla'; class 'foo'; ... };
-   div { attr id => 'bla', class => 'foo'; ...}
+
+2) defining blocks
+    - sub block($&) {
+          my $name = shift;
+          my $code = shift;
+          *{"$package\::$name"} = sub(;&@) {
+              local $block_code = $_[0];
+              local $block_attr = ref($_[1]) eq 'HASH' ? $_[1] : {};
+              
+              # open unnamed tag / $block_attr
+              $markup->add_content($code->($block_attr));
+              # close unnamed tag
+          };
+          ### add $name to @EXPORT
+      }
+      sub content {
+          my %attr = (%{$block_attr}, @_);
+          $block_code->(\%attr) if ($block_code);
+      }
       
-   div (attr => value, ...) { ... code ...};
-   
-   ### add ";" after every Tag in case somebody forgot it -- I always do!
+    - native way of defining a block:
+      block block_name => sub { ... ; content(...); ... };
+      
+    - Devel::Declare'd way of defining a block:
+      block block_name { ... };
+      
+    - native way of calling a block:
+      block_name { ... content ... } { ... };
+      
+    - Devel::Declare'd way of calling a block:
+      block_name id.class(attr_name => attr_value, ...) { ... content ...};
 
 
-2) syntactic Sugar (Devel::Declare):
-
-   # blocks:
-   block something { ... code; yield; ... };
-   block something(a,b) {...}; # a,b are shifted inside sub ?
-   
-   something { ... };
-   something(123,345) {...};
-
-   tag tagname;
-   tag tagname(real_tag_name);
-   empty_tag tagname;
-   empty_tag tagname(real_tag_name);
+3) extensions to known sub's
+    - getters: attr('xxx')       id()        class()
+    - setters: attr('xxx', 42)   id('bla')   class('foo')
 
 
-3) Optional:
-   tagset('Module with Tagset');
-
-
-4) or:
-
-Config-Setting:
-   tagset => 'HTML',                   # Catalyst::View::ByCode::TagSet::HTML
-   tagset => '+My::TagSet::XUL'        # wie ueblich
-   include => 'Helper::Standards'      # Application::Helper::Standards
-   include => '+My::Helper::Standards' # wie ueblich
-
-9) example:
+4) example:
 
 block draw_nav {
-    my $id         = shift;
-    my $navigation = shift;
-    my $selected   = shift;
-    
-    return if (!$navigation);
+    my $attr = shift;
+    return if (!$attr->{navigation});
     
     ul {
-        class $id;
-        foreach my $nav (@{$navigation}) {
+        class $attr->{id};
+        foreach my $nav (@{$attr->{navigation}}) {
             li {
                 a(href => nav_uri($nav->parent
                                 ? stash->{selected_navigation}->url_part 
                                 : (), 
                                 $nav->url_part)) {
                     class 'selected'
-                        if ($selected && $nav->id == $selected->id);
-                    $nav->name_de; ### FIXME -- localize
+                        if ($attr->{selected} && $nav->id == $attr->{selected}->id);
+                    $nav->name_de;
                 };
             };
         }
+    };
+}
+
+block infobox {
+    my $attr = shift;
+    
+    div.infobox {
+        id $attr->{id} if (exists($attr->{id}));
+        div.infobox_head { $attr->{headline} || 'untitled' };
+        div.infobox_content {
+            content;
+        };
     };
 }
 
@@ -91,16 +112,18 @@ template {
            load Css => 'site.css';
        };
        body {
-           div header.class.class {
+           div header.class1.class2 {
                a(href => c->uri_for_action('/home')) {
                    img.logo(src => '/static/images/logo.png');
                };
                
-               draw_nav(...);
+               draw_nav topnav(navigation => ..., selected => ...);
            };
            
            div content {
                yield;
+               
+               infobox leftbox(headline => 'just an info') { ... some content ... };
            };
            
            div footer {
