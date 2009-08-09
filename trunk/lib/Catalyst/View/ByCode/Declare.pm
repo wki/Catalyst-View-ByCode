@@ -178,7 +178,8 @@ sub parse_declaration {
     # check for an indentifier (ID)
     if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
         # looks like an ID
-        $extras .= ($extras ? ' ' : '') . "id '" . strip_name . "';";
+        my $name = strip_name;
+        $extras .= ($extras ? ' ' : '') . "id '$name';";
     }
     
     # check for '.class' as often as possible

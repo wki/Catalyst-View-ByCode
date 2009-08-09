@@ -14,10 +14,12 @@ use HTML::Entities qw(%entity2char);
 
 our $DEBUG   = 1;
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
+
+### removed 'with' from @EXPORT in favour of Moose...
 our @EXPORT     = qw(doctype
                      load
                      yield
-                     with fill using employ
+                     fill using employ
                      attr data
                      set_global_data
                      apply
@@ -47,6 +49,7 @@ our %change_tags = ('select' => 'choice',
                     'td'     => 'tcol',
                     'sub'    => 'subscript',
                     'sup'    => 'superscript',
+                    'meta'   => 'meta_info',    # Moose needs &meta()...
                );
 
 ######################################## IMPORT
