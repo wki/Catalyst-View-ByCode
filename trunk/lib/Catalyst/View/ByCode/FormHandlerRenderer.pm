@@ -122,8 +122,14 @@ has 'label_types' => (
    isa        => 'HashRef[Str]',
    is         => 'rw',
    default    => sub { {
-           text => 'label', password => 'label', 'select' => 'label',  checkbox => 'label', textarea => 'label',
-           radio_group => 'label', compound => 'legend'
+           text => 'label', 
+           password => 'label', 
+           'select' => 'label',  
+           checkbox => 'label', 
+           textarea => 'label',
+           radio_group => 'label', 
+           compound => 'legend',
+           adjoin => 'label',
        }
    },
    auto_deref => 1,
@@ -133,69 +139,88 @@ has 'label_types' => (
 );
 
 sub render {
-   my $self = shift;
+    my $self = shift;
 
-   form {
-       attr action => $self->action if ($self->action);
-       id $self->name if ($self->name);
-       attr method => $self->http_method if ($self->http_method);
-       
-       if ($self->auto_fieldset) {
-           fieldset.main_fieldset {
-               $self->render_fields;
-           }
-       } else {
-           $self->render_fields;
-       }
-   }
+    form {
+        attr action => $self->action if ($self->action);
+        id $self->name if ($self->name);
+        attr method => $self->http_method if ($self->http_method);
+        
+        if ($self->auto_fieldset) {
+            fieldset.main_fieldset {
+                $self->render_fields;
+            }
+        } else {
+            $self->render_fields;
+        }
+        '';
+    }
 }
 
 sub render_fields {
-   my $self = shift;
-
-  $self->render_field($_) for $self->sorted_fields;
+    my $self = shift;
+    my $show_raw = shift || 0;
+    
+    $self->render_field($_, $show_raw) for $self->sorted_fields;
+    
+    if ($show_raw) {
+        foreach my $field (grep {$_} map {$_->errors} ($self->sorted_fields)) {
+            span.error_message { $field };
+        }
+    }
+    
+    return;
 }
 
 sub render_field {
-    my( $self, $field ) = @_;
+    my( $self, $field, $show_raw ) = @_;
 
     $field = $self->field($field) if (!ref($field));
 
     die "must pass field to render_field"
-       unless( defined $field && $field->isa('HTML::FormHandler::Field') );
+        unless( defined $field && $field->isa('HTML::FormHandler::Field') );
     return if $field->widget eq 'no_render';
     my $field_method = 'render_' . $field->widget;
     die "Widget method $field_method not implemented in C::V::ByCode::FormHandlerRenderer"
-      unless $self->can($field_method);
-    my @class = ();
-    if ($field->css_class || $field->has_errors) {
-       push @class, $field->css_class if $field->css_class;
-       push @class, 'error' if $field->has_errors;
-    }
-
-    div {
-        class \@class if (scalar(@class));
+        unless $self->can($field_method);
+      
+    if ($show_raw) {
+        $self->$field_method($field);
+    } else {
+        my @class = ();
+        if ($field->css_class || $field->has_errors) {
+           push @class, $field->css_class if $field->css_class;
+           push @class, 'error' if $field->has_errors;
+        }
         
-        my $l_type = defined $self->get_label_type( $field->widget ) ? $self->get_label_type( $field->widget ) : '';
-        if ($l_type eq 'label'){
-            label.label {
-                attr for => $field->id;
-                $field->label . ': ';
-            };
+        div {
+            class \@class if (scalar(@class));
             
-            $self->$field_method($field);
-            span.error_message { $_ } for $field->errors;
-        } elsif ($l_type eq 'legend') {
-            fieldset {
-                class $field->html_name;
-                legend { $field->label };
+            my $l_type = defined $self->get_label_type( $field->widget ) ? $self->get_label_type( $field->widget ) : '';
+            if ($l_type eq 'label'){
+                label.label {
+                    attr for => $field->id;
+                    $field->label . ': ';
+                };
                 
                 $self->$field_method($field);
                 span.error_message { $_ } for $field->errors;
+            } elsif ($l_type eq 'legend') {
+                fieldset {
+                    class $field->html_name;
+                    legend { $field->label };
+                    
+                    $self->$field_method($field);
+                    span.error_message { $_ } for $field->errors;
+                }
+            } else {
+                $self->$field_method($field);
             }
-        }
-        ''; # suppress if's return...
-    };
+            ''; # suppress if's return...
+        };
+    }
+    
+    return;
 }
 
 sub render_text {
@@ -312,7 +337,15 @@ sub render_textarea {
 sub render_compound {
    my ( $self, $field ) = @_;
 
+   warn "COMPOUND";
    $self->render_field($_) for $field->sorted_fields;
+}
+
+sub render_adjoin {
+   my ( $self, $field ) = @_;
+
+   warn "ADJOIN";
+   $self->render_field($_, 1) for $field->sorted_fields;
 }
 
 sub render_submit {
