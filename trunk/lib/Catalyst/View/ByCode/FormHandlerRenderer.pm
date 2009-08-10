@@ -243,7 +243,7 @@ sub render_select {
 
        my $index = 0;
        foreach my $option ( $field->options ) {
-           option(value => $option->value, id => $field->id) {
+           option(value => $option->{value}, id => $field->id) {
                if ($field->fif) {
                    if ($field->multiple == 1) {
                        my @fif;
@@ -259,6 +259,7 @@ sub render_select {
                        attr selected => 1 if $option->{value} eq $field->fif;
                    }
                }
+               $option->{value};
            };
            $index++;
        }

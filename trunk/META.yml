@@ -1,36 +1,46 @@
 ---
 name: Catalyst-View-ByCode
-version: 0.01
+version: 0.03
 author:
   - 'Wolfgang Kinkeldei <wki@cpan.org>'
 abstract: Templating using pure Perl code
 license: perl
 resources:
-  license: ~
+  license: http://dev.perl.org/licenses/
 requires:
   Catalyst::Runtime: 5.80
+  Devel::Declare: 0.005007
+  HTML::Entities: 1.35
+  HTML::Tagset: 3.10
+  List::Util: 1.21
+  MIME::Base64: 3.07
   Test::Builder: 0.86
   Test::Builder::Tester: 1.18
   Test::Harness: 3.14
   Test::More: 0.86
-  perl: 5.8.8
+  UUID::Random: 0.04
+  YAML: 0.68
+  perl: v5.8.8
+configure_requires:
+  Module::Build: 0.34
 provides:
+  Catalyst::Helper::View::ByCode:
+    file: lib/Catalyst/Helper/View/ByCode.pm
   Catalyst::View::ByCode:
     file: lib/Catalyst/View/ByCode.pm
-    version: 0.01
+    version: 0.03
+  Catalyst::View::ByCode::Declare:
+    file: lib/Catalyst/View/ByCode/Declare.pm
   Catalyst::View::ByCode::Helper:
     file: lib/Catalyst/View/ByCode/Helper.pm
-    version: 0.10
   Catalyst::View::ByCode::Markup:
     file: lib/Catalyst/View/ByCode/Markup.pm
-    version: 0.10
   Catalyst::View::ByCode::Template:
     file: lib/Catalyst/View/ByCode/Template.pm
     version: 0.10
   Catalyst::View::ByCode::Util:
     file: lib/Catalyst/View/ByCode/Util.pm
-    version: 0.10
-generated_by: Module::Build version 0.31
+generated_by: Module::Build version 0.34
 meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.2.html
-  version: 1.2
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
