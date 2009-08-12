@@ -1,5 +1,8 @@
 Revision history for Catalyst-View-ByCode
 
+        2009-08-12
+        * started rewriting the markup engine using Moose
+
 0.03    2009-07-18
         * expanded markup syntax by using some Devel::Declare tricks
         * corrected dependencies in Build.PL

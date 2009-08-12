@@ -1,6 +1,15 @@
 package Catalyst::View::ByCode::Markup::Element::Tag;
 use Moose;
+use Moose::Util::TypeConstraints;
+use MooseX::AttributeHelpers;
 extends 'Catalyst::View::ByCode::Markup::Element::Structured';
+
+type 'AttrName' #=> as 'Str';
+;#    => where { m{\A (a-zA-Z0-9-_)+ \z}xms };
+
+#coerce 'AttrName'
+#    => from 'Str'
+#       => where { qr{\A (a-zA-Z0-9-_)+ \z}xms };
 
 has tag => (
     is => 'rw',
@@ -10,10 +19,19 @@ has tag => (
 );
 
 has attr => (
+    metaclass => 'Collection::Hash',
     is => 'rw',
-    isa => 'HashRef[Str]',
+    isa => 'HashRef[AttrName]',
     lazy => 1,
     default => sub { {} },
+    # coerce => 1,
+    provides => {
+        exists => 'has_attr',
+        keys   => 'attrs',
+        get    => 'get_attr',
+        set    => 'set_attr',
+        delete => 'delete_attr',
+    },
 );
 
 override as_text => sub {

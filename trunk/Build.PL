@@ -18,6 +18,8 @@ my $build = Module::Build->new(
         'HTML::Entities'        => '1.35',
         'List::Util'            => '1.21',
         'UUID::Random'          => '0.04',
+        'Moose' => 0,
+        'MooseX::AttributeHelpers' => 0,
     },
     create_makefile_pl => 'traditional',
     create_readme => 1,
