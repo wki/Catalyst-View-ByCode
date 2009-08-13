@@ -26,13 +26,14 @@ has include   => (is => 'rw', default => sub { [] });
 #
 #
 
-use Catalyst::View::ByCode::Helper qw(:markup);
+# use Catalyst::View::ByCode::Helper qw(:markup);
+use Catalyst::View::ByCode::Renderer qw(:markup);
 use Catalyst::Utils;
 use UUID::Random;
 use Path::Class::File;
 use File::Spec;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -51,6 +52,9 @@ Catalyst::View::ByCode - Templating using pure Perl code
         $c->stash->{current_view} = 'ByCode';
         
         $c->stash->{title} = 'Hello ByCode';
+        
+        # if omitted, would default to 
+        # controller_namespace / action_namespace .pl
         $c->stash->{template} = 'hello.pl';
     }
 
@@ -59,27 +63,29 @@ Catalyst::View::ByCode - Templating using pure Perl code
     # REMARK: 
     #    use 'c' instead of '$c'
     #    prefer 'stash->{...}' to 'c->stash->{...}'
-    html {
-        head {
-            title { c->stash->{title} };
-            load Js => 'site.js';
-            load Css => 'site.js';
-        };
-        body {
-            div header.noprint {
-                ul.topnav {
-                    li {'home'};
-                    li {'surprise'};
+    sub RUN {
+        html {
+            head {
+                title { c->stash->{title} };
+                load Js => 'site.js';
+                load Css => 'site.js';
+            };
+            body {
+                div header.noprint {
+                    ul.topnav {
+                        li {'home'};
+                        li {'surprise'};
+                    };
+                };
+                div content {
+                    h1 { c->stash->{title} };
+                    div { 'hello.pl is running! };
+                    img(src => '/static/images/catalyst_logo.png');
                 };
             };
-            div content {
-                h1 { c->stash->{title} };
-                div { 'hello.pl is running! };
-                img(src => '/static/images/catalyst_logo.png');
-            };
         };
-    };
-    # 266 characters without white space
+    }
+    # 274 characters without white space
     
     
     # 4) expect to get this HTML generated:
@@ -208,29 +214,30 @@ As usual for Perl, there is always more than one way to do it:
 
 =over
 
-=item prefixing or appending
-
-Every tag may get prefixed or appended by a C<with> method containing all
-attributes that should go into the opening tag.
-
-    # prefixing
-    with {id => 'top', 
-          class => 'noprint silver', 
-          style => 'display: none'} div {'content'};
-    
-    # prefixing using other data types
-    with {id => 'top', 
-          class => [qw(noprint silver)], 
-          style => {display => 'none'}} div {'content'};
-    
-    # using 'with' more than once
-    with {id => 'top'}
-    with {class => 'noprint silver'}
-    div {'content'}
-    with {style => 'display: none'};
-    
-    # always generates this:
-    <div id="top" class="noprint silver" style="display: none">content</div>
+# OBSOLETED!!!
+# =item prefixing or appending
+# 
+# Every tag may get prefixed or appended by a C<with> method containing all
+# attributes that should go into the opening tag.
+# 
+#     # prefixing
+#     with {id => 'top', 
+#           class => 'noprint silver', 
+#           style => 'display: none'} div {'content'};
+#     
+#     # prefixing using other data types
+#     with {id => 'top', 
+#           class => [qw(noprint silver)], 
+#           style => {display => 'none'}} div {'content'};
+#     
+#     # using 'with' more than once
+#     with {id => 'top'}
+#     with {class => 'noprint silver'}
+#     div {'content'}
+#     with {style => 'display: none'};
+#     
+#     # always generates this:
+#     <div id="top" class="noprint silver" style="display: none">content</div>
 
 =item special content
 
@@ -382,7 +389,8 @@ sub process {
         #
         # let automatism work thru the yield-list
         #
-        Catalyst::View::ByCode::Helper::yield;
+        ### Catalyst::View::ByCode::Helper::yield;
+        Catalyst::View::ByCode::Renderer::yield;
     };
     my $output = get_markup();
     clear_markup;
@@ -469,6 +477,7 @@ sub _compile_template {
     my $sub_name = shift || 'RUN';
     
     return if (!$template);
+    $c->log->debug("compiling: $template");
     
     #
     # convert between path and package
@@ -519,7 +528,7 @@ sub _compile_template {
         $self->__compile($c, $full_path => $package);
     }
     
-    # $c->log->debug('can run: ', $package->can($sub_name)) if $c->debug;
+    $c->log->debug('can run: ', $package->can($sub_name)) if $c->debug;
     
     return $package->can($sub_name);
 }
@@ -549,6 +558,7 @@ sub __compile {
         $file_contents = <$file>;
         close($file);
     } else {
+        $c->log->error('Error opening file');
         return; ### FIXME: throw exception is better
     }
 
@@ -569,7 +579,8 @@ use warnings;
 use utf8;
 
 use Devel::Declare();
-use Catalyst::View::ByCode::Helper qw(:default);
+### use Catalyst::View::ByCode::Helper qw(:default);
+use Catalyst::View::ByCode::Renderer qw(:default);
 $include
 # subs that are overloaded here would warn otherwise
 no warnings 'redefine';
@@ -593,7 +604,7 @@ PERL
     #                thus, we need to save into a TEMP-file
     #
     eval "do '$tempfile'";
-    unlink $tempfile;
+    #unlink $tempfile;
     if ($@) {
         #
         # error during compile
@@ -602,7 +613,8 @@ PERL
         $c->log->error(qq/compile error: $@/);
         return; ### FIXME: throwing an error is better
     }
-
+    $c->log->debug('compiling done');
+    
     #
     # create some magic _variables
     #

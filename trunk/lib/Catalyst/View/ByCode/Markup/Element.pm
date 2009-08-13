@@ -5,12 +5,11 @@ has content => (
     is => 'rw',
     isa => 'Str',
     lazy => 1,
-    default => sub { '' },
+    default => '',
 );
 
-use overload '""' => \&_as_text, fallback => 1;
+use overload '""' => sub { $_[0]->as_text() }, fallback => 1;
 
-sub _as_text { $_[0]->as_text() }
 sub as_text { $_[0]->content }
 
 sub _html_escape {

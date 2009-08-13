@@ -5,14 +5,14 @@ use Test::Exception;
 #
 # can module get use'd ?
 #
-BEGIN { use_ok('Catalyst::View::ByCode::Markup::Element::EscapedText') };
+BEGIN { use_ok('Catalyst::View::ByCode::Markup::EscapedText') };
 
 #
 # instantiate a element
 #
 my $e;
-lives_ok { $e = new Catalyst::View::ByCode::Markup::Element::EscapedText() } 'empty new element lives';
-isa_ok($e, 'Catalyst::View::ByCode::Markup::Element::EscapedText', 'class is OK');
+lives_ok { $e = new Catalyst::View::ByCode::Markup::EscapedText() } 'empty new element lives';
+isa_ok($e, 'Catalyst::View::ByCode::Markup::EscapedText', 'class is OK');
 can_ok($e, 'content', 'as_text');
 is($e->content, '', 'content is empty');
 is("$e", '', 'stringified content is empty');
