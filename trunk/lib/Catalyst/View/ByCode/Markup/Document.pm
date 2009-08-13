@@ -1,0 +1,103 @@
+package Catalyst::View::ByCode::Markup::Document;
+use Moose;
+use MooseX::AttributeHelpers;
+use Catalyst::View::ByCode::Markup::Element;
+use Catalyst::View::ByCode::Markup::EscapedText;
+use Catalyst::View::ByCode::Markup::Tag;
+extends 'Catalyst::View::ByCode::Markup::Structured';
+
+has tag_stack => (
+    metaclass => 'Collection::Array',
+    is => 'rw',
+    isa => 'ArrayRef[Object]',
+    lazy => 1,
+    default => sub { [] },
+    provides => {
+        push => 'add_open_tag',
+        pop => 'remove_open_tag',
+        last => 'current_tag',
+        empty => 'has_opened_tag',
+    },
+);
+
+override as_text => sub {
+    my $self = shift;
+    # ignore indentation my $indent_level = shift || 0;
+
+    my $need_break = 1;
+    return join('', map {$_->as_text(0, \$need_break)} @{$self->content});
+};
+
+sub open_tag {
+    my $self = shift;
+    my $tag_name = shift;
+    $tag_name = '' if (!defined($tag_name));
+    
+    my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
+ 
+    $self->append($e);
+    $self->add_open_tag($e);
+    
+    return;
+}
+
+sub close_tag {
+    my $self = shift;
+    
+    die 'no tag open' if (!$self->has_opened_tag);
+    
+    $self->remove_open_tag;
+    
+    return;
+}
+
+sub add_tag {
+    my $self = shift;
+    
+    $self->open_tag(@_);
+    $self->close_tag;
+    
+    return;
+}
+
+sub append {
+    my $self = shift;
+    my $content = shift;
+
+    ### ($self->current_tag || $self) -> add_content($content); ### does this work???
+
+    if ($self->has_opened_tag) {
+        $self->current_tag->add_content($content);
+    } else {
+        $self->add_content($content);
+    }
+    
+    return;
+}
+
+sub add_text {
+    my $self = shift;
+    my $text = shift;
+    my $raw = shift || 0;
+
+    return if (!defined($text) || ref($text) || $text eq '');
+    
+    my $class = 'Catalyst::View::ByCode::Markup::' . ($raw ? 'Element' : 'EscapedText');
+    $self->append($class->new(content => $text));
+
+    return;
+}
+
+sub set_attr {
+    my $self = shift;
+    
+    die 'no tag open' if (!$self->has_opened_tag);
+    die 'no attr given' if (!scalar(@_));
+    
+    $self->current_tag->set_attr(@_);
+    
+    return;
+}
+
+no Moose;
+1;
