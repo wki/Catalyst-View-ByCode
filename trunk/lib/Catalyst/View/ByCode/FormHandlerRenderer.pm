@@ -1,7 +1,7 @@
 package Catalyst::View::ByCode::FormHandlerRenderer;
 
 use Moose::Role;
-use Catalyst::View::ByCode::Helper ':default';
+use Catalyst::View::ByCode::Renderer ':default';
 
 requires( 'sorted_fields', 'field' );
 

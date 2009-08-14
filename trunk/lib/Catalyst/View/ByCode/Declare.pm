@@ -75,6 +75,20 @@ sub skip_declarator {
 }
 
 #
+# skip a name
+#
+sub skip_name {
+    skipspace;
+    
+    if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
+        my $linestr = Devel::Declare::get_linestr;
+        $Offset += $length;
+        return substr($linestr,$Offset-$length, $length);
+    }
+    return;
+}
+
+#
 # read a valid name if possible
 #
 sub strip_name {
@@ -130,16 +144,20 @@ sub inject_if_block {
 #     return 0;
 # }
 
-# CURRENTLY NOT NEEDED
-# #
-# # put modified sub into requested package
-# #
-# sub shadow {
-#     my $package = Devel::Declare::get_curstash_name;
-#     my $code = shift;
-#     warn "putting $Declarator into $package...";
-#     Devel::Declare::shadow_sub("$package\::$Declarator", $code);
-# }
+#
+# put modified sub into requested package
+#
+sub install_sub {
+    my $sub_name = shift;
+    my $code = shift;
+
+    my $package = Devel::Declare::get_curstash_name;
+
+    no strict 'refs';
+    no warnings 'redefine';
+    *{"$package\::$sub_name"} = $code;
+    push @{"$package\::EXPORT"}, $sub_name;
+}
 
 # CURRENTLY NOT NEEDED
 # #
@@ -225,42 +243,68 @@ sub tag_parser {
         local ($Declarator, $Offset) = @_;
         return if (declarator_is_hash_key);
         
+        # parse the id.class() {} declaration
         parse_declaration;
     };
+}
+
+#
+# add a tag parser
+#
+sub add_tag_parser {
+    my $sub_name = shift;
+    
+    my $package = Devel::Declare::get_curstash_name;
+    
+    Devel::Declare->setup_for($package,
+                              {
+                                  $sub_name => {
+                                      const => tag_parser
+                                  }
+                              });
 }
 
 #
 # generate a block-parser
 # initiated after compiling 'block'
-# parses: 'block'   name   id?   ('.' class)*   ( '(' .* ')' )?
-# injects 'sub' instead of 'block'
+# parses: 'block' 'name'
+# injects ' => sub' after 'name'
 #
 sub block_parser {
+    warn "install block parser";
     return sub {
+        warn "running block parser";
         local ($Declarator, $Offset) = @_;
-        my $inject_position = $Offset;
         return if (declarator_is_hash_key);
+
+        # skip the block_name to append a '=> sub' afterwards
+        my $sub_name = skip_name;
+        inject(' => sub ');
+        $Offset += 8;
+
+        #my $linestr = Devel::Declare::get_linestr;
+        #warn "linestr ='$linestr'";
         
-        inject('sub', $Offset - $inject_position, $inject_position);
-        
-        parse_declaration;
+        # insert a preliminary sub named $sub_name into the caller's namespace
+        install_sub($sub_name => sub(;&) {});
+        add_tag_parser($sub_name);
     };
 }
 
-#
-# idea: replace 'template' by 'sub RUN'
-# does not work yet...
-#
-sub template_parser {
-    return sub {
-        local ($Declarator, $Offset) = @_;
-        #my $inject_position = $Offset;
-        # return if (declarator_is_hash_key);
-        #skip_declarator;
-        my $linestr = Devel::Declare::get_linestr;
-        warn "Template. Offset=$Offset, source = " . substr($linestr, $Offset, 10);
-
-        inject('; sub RUN', 8);
-    }
-}
+# #
+# # idea: replace 'template' by 'sub RUN'
+# # does not work yet...
+# #
+# sub template_parser {
+#     return sub {
+#         local ($Declarator, $Offset) = @_;
+#         #my $inject_position = $Offset;
+#         # return if (declarator_is_hash_key);
+#         #skip_declarator;
+#         my $linestr = Devel::Declare::get_linestr;
+#         warn "Template. Offset=$Offset, source = " . substr($linestr, $Offset, 10);
+# 
+#         inject('; sub RUN', 8);
+#     }
+# }
 1;

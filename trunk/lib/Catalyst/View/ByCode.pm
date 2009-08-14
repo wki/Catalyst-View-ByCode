@@ -603,8 +603,9 @@ PERL
     # Devel::Declare does not work well with eval()'ed code...
     #                thus, we need to save into a TEMP-file
     #
-    eval "do '$tempfile'";
-    #unlink $tempfile;
+    #eval "do '$tempfile'";
+    do $tempfile;
+    unlink $tempfile;
     if ($@) {
         #
         # error during compile

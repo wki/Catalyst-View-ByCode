@@ -11,26 +11,27 @@ use HTML::Tagset;
 
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
 
-our @EXPORT     = qw(doctype
+our @EXPORT     = qw(template block block_content
                      load
                      yield
                      attr
-                     apply
                      class id on
-                     stash c _);
+                     stash c _
+                     doctype
+                    );
 our %EXPORT_TAGS = (
     markup  => [qw(clear_markup init_markup get_markup markup_object)],
     default => [@EXPORT, @EXPORT_OK],
 );
 
 #
-# define variables
+# define variables -- get local() ized at certain positions
 #
-our $document; # initialized with 'init_markup',  ### FIXME: right?
-             # doing this during 'import' could be bad
-our $stash;  # current stash
-our $c;      # current context
-our $view;   # ByCode View instance
+our $document;      # initialized with &init_markup()
+our $stash;         # current stash
+our $c;             # current context
+our $view;          # ByCode View instance
+our $block_content; # code for executing &content()
 
 #
 # some tags get changed by simply renaming them
@@ -136,6 +137,48 @@ sub markup_object {
 }
 
 ######################################## EXPORTED FUNCTIONS
+#
+# a template definition instead of sub RUN {}
+#
+sub template(&) {
+    my $code = shift;
+    
+    my $package = caller;
+    
+    no strict 'refs';
+    *{"$package\::RUN"} = $code;
+    use strict 'refs';
+}
+
+#
+# a block definition
+#
+sub block($&) {
+    my $name = shift;
+    my $code = shift;
+    
+    my $package = caller;
+
+    no strict 'refs';
+    no warnings 'redefine';
+    # push @EXPORT, $name; ### WRONG: done at compile-time in ::Declare::install_sub()
+    *{"$package\::$name"} = sub(;&) {
+        local $block_content = shift;
+        
+        $document->open_tag();
+        $document->add_text($code->()) if ($code);
+        $document->close_tag();
+    };
+    use strict 'refs';
+}
+
+#
+# execute a block's content
+#
+sub block_content() {
+    $document->add_text($block_content->()) if ($block_content);
+}
+
 #
 # a simple shortcut for css/js handling
 # usage:
@@ -249,24 +292,31 @@ sub yield(;*@) {
     return;
 }
 
-#
-# the outside view of _collect to expand things
-# sub my_testblock(;&@) {
-#    my $code = shift;
-#    apply { my $element = shift; # a hashref for a pseudo-tag (tag=undef)
-#            ... some code using @_ ...
-#            $code->() if ($code); 
-#    } @_;
+# #
+# # the outside view of _collect to expand things
+# # sub my_testblock(;&@) {
+# #    my $code = shift;
+# #    apply { my $element = shift; # a hashref for a pseudo-tag (tag=undef)
+# #            ... some code using @_ ...
+# #            $code->() if ($code); 
+# #    } @_;
+# # }
+# #
+# ### FIXME: does not work now.   
+# sub apply(&;@) { # _handle_component(undef, undef, @_); 
 # }
-#
-### FIXME: does not work now.   
-sub apply(&;@) { # _handle_component(undef, undef, @_); 
-}
 
 #
 # set attribute(s) of latest open tag (instead of 'with' outside)
 #
-sub attr { $document->set_attr(@_); return; }
+sub attr {
+    if (scalar(@_) == 1) {
+        # use it as a getter returning a value
+        return $document->get_attr(@_);
+    }
+    $document->set_attr(@_);
+    return;
+}
 
 #
 # set a class inside a tag
@@ -386,6 +436,11 @@ sub _construct_functions {
             const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
+    
+    # add logic for block definitions
+    $declare{block} = {
+        const => Catalyst::View::ByCode::Declare::block_parser
+    };
     
     # install all tag-parsers collected above
     Devel::Declare->setup_for($namespace, \%declare);

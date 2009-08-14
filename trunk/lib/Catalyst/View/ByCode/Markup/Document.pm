@@ -99,5 +99,15 @@ sub set_attr {
     return;
 }
 
+sub get_attr {
+    my $self = shift;
+    my $attr_name = shift;
+    
+    die 'no tag open' if (!$self->has_opened_tag);
+    die 'no attr-name given' if (!$attr_name);
+    
+    return $self->current_tag->get_attr($attr_name);
+}
+
 no Moose;
 1;
