@@ -157,6 +157,7 @@ sub install_sub {
     no warnings 'redefine';
     *{"$package\::$sub_name"} = $code;
     push @{"$package\::EXPORT"}, $sub_name;
+    ### right?? push @{"$package\::$EXPORT_TAGS\{default\}"}, $sub_name;
 }
 
 # CURRENTLY NOT NEEDED
@@ -164,11 +165,12 @@ sub install_sub {
 # # inject something after scope as soon as '}' is reached
 # #
 # sub inject_scope {
+#     my $inject = shift;
 #     on_scope_end {
 #         my $linestr = Devel::Declare::get_linestr;
 #         my $offset = Devel::Declare::get_linestr_offset;
 #         
-#         substr($linestr, $offset, 0) = ';';
+#         substr($linestr, $offset, 0) = $inject;
 #         Devel::Declare::set_linestr($linestr);
 #     };
 # }

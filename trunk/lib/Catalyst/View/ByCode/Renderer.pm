@@ -42,7 +42,10 @@ our %change_tags = ('select' => 'choice',
                     'td'     => 'tcol',
                     'sub'    => 'subscript',
                     'sup'    => 'superscript',
-                    'meta'   => 'meta_info',    # Moose needs &meta()...
+                    'meta'   => 'meta_tag',    # Moose needs &meta()...
+                    'q'      => 'quote',
+                    's'      => 'strike',
+                    'map'    => 'imgmap',
 );
 
 ######################################## IMPORT

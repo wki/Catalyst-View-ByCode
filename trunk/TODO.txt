@@ -1,13 +1,16 @@
 Changes C::V::ByCode
 
-0) Template file
+++ Tag.pm -- attr isa HashRef (!) -- no constraint here!
+
+
+0) Template file  +++ DONE!
     - sub template(&);
     - template { ... code ... };
       # equivalent to:
       sub RUN { ... }
 
 
-1) new way defining tags
+1) new way defining tags -- DO WE NEED THIS?
     - sub &C::V::B::Renderer::tag();
     - tag 'sub_name', 'real_tag_name';
       add 'sub_name' to @EXPORT, $EXPORT_TAGS{default}
@@ -25,36 +28,28 @@ Changes C::V::ByCode
       div id.class(attr_name => attr_value, ...) { ... content ...};
 
 
-2) defining blocks
-    - sub block($&) {
-          my $name = shift;
-          my $code = shift;
-          *{"$package\::$name"} = sub(;&@) {
-              local $block_code = $_[0];
-              local $block_attr = ref($_[1]) eq 'HASH' ? $_[1] : {};
-              
-              # open unnamed tag / $block_attr
-              $markup->add_content($code->($block_attr));
-              # close unnamed tag
-          };
-          ### add $name to @EXPORT
-      }
-      sub content {
-          my %attr = (%{$block_attr}, @_);
-          $block_code->(\%attr) if ($block_code);
-      }
-      
+2) defining blocks  +++ PARTLY DONE
+    --> still TODO:
+        - find a clever way to transport attr() info into block
+          instead of into tag containing the block_content
+        - if a block is defined in a use()d package,
+          find a way to mark a block-sub for creation of a tag_parser
+    --> block_name id.class(...) { ... };
+        ==> block_name { ... } ...;
+        (definition :: sub block_name(&;%) {...} -- second++ param maybe hash)
+    --> CAVEAT: attr() definitions inside block {} will not work as expected
+
     - native way of defining a block:
-      block block_name => sub { ... ; content(...); ... };
+      block block_name => sub { ... ; block_content(...); ... };
       
     - Devel::Declare'd way of defining a block:
       block block_name { ... };
       
     - native way of calling a block:
-      block_name { ... content ... } { ... };
+      block_name { ... block_content ... } { ... };
       
     - Devel::Declare'd way of calling a block:
-      block_name id.class(attr_name => attr_value, ...) { ... content ...};
+      block_name id.class(attr_name => attr_value, ...) { ... block_content ...};
 
 
 3) extensions to known sub's
@@ -65,19 +60,20 @@ Changes C::V::ByCode
 4) example:
 
 block draw_nav {
-    my $attr = shift;
-    return if (!$attr->{navigation});
+    my $navigation = attr('navigation');
+    my $selected = attr('selected');
+    return if (!$navigation);
     
     ul {
         class $attr->{id};
-        foreach my $nav (@{$attr->{navigation}}) {
+        foreach my $nav (@{$navigation}) {
             li {
                 a(href => nav_uri($nav->parent
                                 ? stash->{selected_navigation}->url_part 
                                 : (), 
                                 $nav->url_part)) {
                     class 'selected'
-                        if ($attr->{selected} && $nav->id == $attr->{selected}->id);
+                        if ($selected && $nav->id == $selected->id);
                     $nav->name_de;
                 };
             };
@@ -86,13 +82,14 @@ block draw_nav {
 }
 
 block infobox {
-    my $attr = shift;
+    my $id = attr('id');
+    my $headline = attr('headline') || 'untitled';
     
     div.infobox {
-        id $attr->{id} if (exists($attr->{id}));
-        div.infobox_head { $attr->{headline} || 'untitled' };
+        id $id if ($id);
+        div.infobox_head { $headline };
         div.infobox_content {
-            content;
+            block_content;
         };
     };
 }
