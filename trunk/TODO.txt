@@ -1,59 +1,5 @@
 Changes C::V::ByCode
 
--1) rewrite using Moose
-
- Base -- abstract
-   Text
-     HTMLEscapedText
-   List
-     Tag
-       XHTML
-
-package C::V::B::Markup::Content::Base; # base
-use Moose;
-has content => ( ### bad practice to change type in subclasses...
-    isa  => 'Any',
-);
-use overload '"' => \&as_string; // unescaped handling
-
-package C::V::B::Markup::Content::Text;
-use Moose;
-extends 'C::V::B::Markup::Content::Base';
-has content => (
-    isa => 'Str',
-);
-
-
-package C::V::B::Markup::Content::List;
-use Moose;
-use MooseX::AttributeHelpers;
-extends 'C::V::B::Markup::Content::Base';
-has content => ( # holds list with content elements/text/whatever
-    metaclass => 'Collection::Array', # or ::List
-    is => 'rw',
-    isa => 'ArrayRef',
-    coerce ...
-);
-sub append {} # append something to end of list
-
-
-package C::V::B::Markup::Content::Tag;
-use Moose;
-extends 'C::V::B::Markup::Content::List';
-has tag => ();
-has attr => ();
-
-
-package C::V::B::Markup::XHTML;
-use Moose;
-extends 'C::V::B::Markup::Content::Tag';
-has open_tags => ();
-sub append {} # overloaded: append to last open tag
-sub open {} # open a tag
-sub close {} # close a tag
-
-
-
 0) Template file
     - sub template(&);
     - template { ... code ... };
@@ -62,7 +8,7 @@ sub close {} # close a tag
 
 
 1) new way defining tags
-    - sub C::V::B::Helper::tag;
+    - sub &C::V::B::Renderer::tag();
     - tag 'sub_name', 'real_tag_name';
       add 'sub_name' to @EXPORT, $EXPORT_TAGS{default}
     - creates:
@@ -75,13 +21,7 @@ sub close {} # close a tag
           # close tag
       }
     
-    - native way of calling:
-      div { 
-          my $attr = shift; # optional
-          ... content ... 
-      } {attr_name => attr_value, ...};
-    
-    - Devel::Declare'd way of calling:
+    - Devel::Declare way of calling:
       div id.class(attr_name => attr_value, ...) { ... content ...};
 
 

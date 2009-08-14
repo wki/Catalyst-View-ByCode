@@ -4,8 +4,12 @@ lib/Catalyst/Helper/View/ByCode.pm
 lib/Catalyst/View/ByCode.pm
 lib/Catalyst/View/ByCode/Declare.pm
 lib/Catalyst/View/ByCode/FormHandlerRenderer.pm
-lib/Catalyst/View/ByCode/Helper.pm
-lib/Catalyst/View/ByCode/Markup.pm
+lib/Catalyst/View/ByCode/Markup/Document.pm
+lib/Catalyst/View/ByCode/Markup/Element.pm
+lib/Catalyst/View/ByCode/Markup/EscapedText.pm
+lib/Catalyst/View/ByCode/Markup/Structured.pm
+lib/Catalyst/View/ByCode/Markup/Tag.pm
+lib/Catalyst/View/ByCode/Renderer.pm
 lib/Catalyst/View/ByCode/Template.pm
 lib/Catalyst/View/ByCode/Util.pm
 Makefile.PL
@@ -14,5 +18,11 @@ META.yml
 README
 t/0-util.t
 t/1-markup.t
+t/100-m-element.t
+t/120-m-e-escaped.t
+t/130-m-e-structured.t
+t/140-m-e-tag.t
+t/150-m-e-document.t
 t/2-basic.t
+t/200-renderer.t
 TODO.txt
