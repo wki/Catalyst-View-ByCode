@@ -406,7 +406,7 @@ sub _handle_tag {
     my $tag_name = shift;
     my $code = shift;
     
-    $document->open_tag($tag_name);
+    $document->open_tag($tag_name, @_);
     $document->add_text($code->(@_)) if ($code);
     $document->close_tag($tag_name);
 }

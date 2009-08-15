@@ -3,9 +3,7 @@ use strict;
 use warnings;
 
 use Devel::Declare();
-# use B::Hooks::EndOfScope;
-# use Data::Dump 'dump';
-
+use B::Hooks::EndOfScope;
 
 ###### Thanks #####################################################
 #                                                                 #
@@ -18,53 +16,12 @@ use Devel::Declare();
 # these variables will get local()'ized during a parser run
 our ($Declarator, $Offset);
 
+####################################### SCANNERs
 #
 # skip space symbols (if any)
 #
-sub skipspace {
+sub skip_space {
     $Offset += Devel::Declare::toke_skipspace($Offset);
-}
-
-#
-# non-destructively read next character
-#
-sub next_char {
-    skipspace;
-    my $linestr = Devel::Declare::get_linestr;
-    return substr($linestr, $Offset, 1);
-}
-
-# CURRENTLY NOT NEEDED
-# #
-# # non-destructively read next word (=token)
-# #
-# sub next_word {
-#     skipspace;
-#     
-#     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
-#         my $linestr = Devel::Declare::get_linestr;
-#         return substr($linestr, $Offset, $length);
-#     }
-#     return '';
-# }
-
-#
-# inject something at current position
-#  - with optional length
-#  - at optional offset
-# returns thing at inserted position before
-#
-sub inject {
-    my $inject = shift;
-    my $length = shift || 0;
-    my $offset = shift || 0;
-
-    my $linestr  = Devel::Declare::get_linestr;
-    my $previous = substr($linestr, $Offset+$offset, $length);
-    substr($linestr, $Offset+$offset, $length) = $inject;
-    Devel::Declare::set_linestr($linestr);
-    
-    return $previous;
 }
 
 #
@@ -75,10 +32,10 @@ sub skip_declarator {
 }
 
 #
-# skip a name
+# skip a word and return it -- or undef if no word found
 #
-sub skip_name {
-    skipspace;
+sub skip_word {
+    skip_space;
     
     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
         my $linestr = Devel::Declare::get_linestr;
@@ -89,10 +46,33 @@ sub skip_name {
 }
 
 #
-# read a valid name if possible
+# non-destructively read next character
+#
+sub next_char {
+    skip_space;
+    my $linestr = Devel::Declare::get_linestr;
+    return substr($linestr, $Offset, 1);
+}
+
+# CURRENTLY NOT NEEDED
+# #
+# # non-destructively read next word (=token)
+# #
+# sub next_word {
+#     skip_space;
+#     
+#     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
+#         my $linestr = Devel::Declare::get_linestr;
+#         return substr($linestr, $Offset, $length);
+#     }
+#     return '';
+# }
+
+#
+# destructively read a valid name if possible
 #
 sub strip_name {
-    skipspace;
+    skip_space;
     
     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
         return inject('',$length);
@@ -115,10 +95,102 @@ sub strip_proto {
 }
 
 #
+# helper: check if a declarator is in a hash key
+#
+sub declarator_is_hash_key {
+    my $offset_before = $Offset;
+    skip_declarator;
+    
+    # This means that current declarator is in a hash key.
+    # Don't shadow sub in this case
+    return ($Offset == $offset_before);
+}
+
+#
+# parse: id?   ('.' class)*   ( '(' .* ')' )?
+#
+sub parse_tag_declaration {
+    # collect ID, class and (...) staff here...
+    # for later injection into top of block
+    my $extras = '';
+    
+    # check for an indentifier (ID)
+    if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
+        # looks like an ID
+        my $name = strip_name;
+        #$extras .= ($extras ? ' ' : '') . "id '$name';";
+        $extras .= " id => '$name',";
+    }
+    
+    # check for '.class' as often as possible
+    my @class;
+    while (next_char eq '.') {
+        # found '.' -- eliminate it and read name
+        inject('',1);
+        push @class, strip_name;
+    }
+    if (scalar(@class)) {
+        # $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
+        $extras .= " class => '" . join(' ', @class) . "',";
+    }
+    
+    #
+    # see if we have (...) stuff
+    #
+    my $proto = strip_proto;
+    if ($proto) {
+        ### BAD HACK: multiline (...) things will otherwise fail
+        $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
+        # $extras .= ($extras ? ' ' : '') . "attr $proto;";
+        $extras .= " $proto,";
+    }
+    
+    # OLD BEHAVIOR -- now add attr's after the block
+    # #
+    # # insert extras into the block
+    # # in doubt creating a new one...
+    # #
+    # if ($extras) {
+    #     inject_into_block(qq{$extras;})
+    #         or inject(qq({$extras;};));
+    # }
+    
+    if ($extras) {
+        if (next_char eq '{') {
+            # block present -- add after block
+            inject_after_block($extras);
+        } else {
+            # no block present -- fake a block and add after it
+            inject(" {} $extras");
+        }
+    }
+}
+
+####################################### INJECTORs
+#
+# inject something at current position
+#  - with optional length
+#  - at optional offset
+# returns thing at inserted position before
+#
+sub inject {
+    my $inject = shift;
+    my $length = shift || 0;
+    my $offset = shift || 0;
+
+    my $linestr  = Devel::Declare::get_linestr;
+    my $previous = substr($linestr, $Offset+$offset, $length);
+    substr($linestr, $Offset+$offset, $length) = $inject;
+    Devel::Declare::set_linestr($linestr);
+    
+    return $previous;
+}
+
+#
 # inject something at top of a '{ ...}' block
 # returns: boolean depending on success
 #
-sub inject_if_block {
+sub inject_into_block {
     my $inject = shift;
     
     if (next_char eq '{') {
@@ -128,22 +200,48 @@ sub inject_if_block {
     return 0;
 }
 
-# CURRENTLY NOT NEEDED
-# #
-# # inject something before a '{ ...}' block
-# # returns: boolean depending on success
-# #
-# sub inject_before_block {
-#     my $inject = shift;
-#     
-#     if (next_char eq '{') {
-#         inject($inject);
-#         return 1;
-#     }
-#     
-#     return 0;
-# }
+#
+# inject something before a '{ ...}' block
+# returns: boolean depending on success
+#
+sub inject_before_block {
+    my $inject = shift;
+    
+    if (next_char eq '{') {
+        inject($inject);
+        return 1;
+    }
+    
+    return 0;
+}
 
+#
+# inject something after scope as soon as '}' is reached
+#
+our @thing_to_inject;
+
+sub inject_after_block { # called from a parser
+    my $inject = shift;
+    push @thing_to_inject, $inject;
+    
+    # force calling the sub below as soon as block's scope is done.
+    inject_into_block(qq{ BEGIN { Catalyst::View::ByCode::Declare::post_block_inject }; });
+}
+
+sub post_block_inject { # called from a BEGIN {} block at scope start
+    my $inject = pop @thing_to_inject;
+
+    on_scope_end {
+        my $linestr = Devel::Declare::get_linestr;
+        my $offset = Devel::Declare::get_linestr_offset;
+        
+        substr($linestr, $offset, 0) = $inject;
+        Devel::Declare::set_linestr($linestr);
+        # warn "after block, o=$offset, line='$linestr'";
+    };
+}
+
+####################################### ADD SUBs
 #
 # put modified sub into requested package
 #
@@ -160,85 +258,12 @@ sub install_sub {
     ### right?? push @{"$package\::$EXPORT_TAGS\{default\}"}, $sub_name;
 }
 
-# CURRENTLY NOT NEEDED
-# #
-# # inject something after scope as soon as '}' is reached
-# #
-# sub inject_scope {
-#     my $inject = shift;
-#     on_scope_end {
-#         my $linestr = Devel::Declare::get_linestr;
-#         my $offset = Devel::Declare::get_linestr_offset;
-#         
-#         substr($linestr, $offset, 0) = $inject;
-#         Devel::Declare::set_linestr($linestr);
-#     };
-# }
-
-#
-# helper: check if a declarator is in a hash key
-#
-sub declarator_is_hash_key {
-    my $offset_before = $Offset;
-    skip_declarator;
-    
-    # This means that current declarator is in a hash key.
-    # Don't shadow sub in this case
-    return ($Offset == $offset_before);
-}
-
-#
-# parse: id?   ('.' class)*   ( '(' .* ')' )?
-#
-sub parse_declaration {
-    # collect ID, class and (...) staff here...
-    # for later injection into top of block
-    my $extras = '';
-    
-    # check for an indentifier (ID)
-    if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
-        # looks like an ID
-        my $name = strip_name;
-        $extras .= ($extras ? ' ' : '') . "id '$name';";
-    }
-    
-    # check for '.class' as often as possible
-    my @class;
-    while (next_char eq '.') {
-        # found '.' -- eliminate it and read name
-        inject('',1);
-        push @class, strip_name;
-    }
-    if (scalar(@class)) {
-        $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
-    }
-    
-    #
-    # see if we have (...) stuff
-    #
-    my $proto = strip_proto;
-    if ($proto) {
-        ### FIXME: multiline (...) things will otherwise fail
-        $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
-        $extras .= ($extras ? ' ' : '') . "attr $proto;";
-    }
-    
-    #
-    # insert extras into the block
-    # in doubt creating a new one...
-    #
-    if ($extras) {
-        inject_if_block(qq{$extras;})
-            or inject(qq({$extras;};));
-    }
-}
-
 ####################################### PARSERs
 #
 # generate a tag-parser
 # initiated after compiling a tag subroutine
 # parses: tag   id?   ('.' class)*   ( '(' .* ')' )?
-# injects some magic into the block following the declaration
+# injects some magic after the block following the declaration
 #
 sub tag_parser {
     return sub {
@@ -246,7 +271,7 @@ sub tag_parser {
         return if (declarator_is_hash_key);
         
         # parse the id.class() {} declaration
-        parse_declaration;
+        parse_tag_declaration;
     };
 }
 
@@ -269,44 +294,34 @@ sub add_tag_parser {
 #
 # generate a block-parser
 # initiated after compiling 'block'
-# parses: 'block' 'name'
-# injects ' => sub' after 'name'
+# parses: 'block' name '{'
+# injects ' => sub' after name
 #
 sub block_parser {
-    warn "install block parser";
+    # warn "install block parser";
     return sub {
-        warn "running block parser";
+        # warn "running block parser";
         local ($Declarator, $Offset) = @_;
         return if (declarator_is_hash_key);
 
+        # magic only starts if initiated with a bare-word
+        return if (next_char !~ m{\A[a-zA-Z_]}xms);
+        
         # skip the block_name to append a '=> sub' afterwards
-        my $sub_name = skip_name;
+        my $sub_name = skip_word;
+        
+        # bare-word must be followed by a code-block
+        return if (next_char != '{');
+        
         inject(' => sub ');
         $Offset += 8;
-
-        #my $linestr = Devel::Declare::get_linestr;
-        #warn "linestr ='$linestr'";
         
-        # insert a preliminary sub named $sub_name into the caller's namespace
-        install_sub($sub_name => sub(;&) {});
+        # insert a preliminary sub named $sub_name 
+        # into the caller's namespace to make compiler happy
+        # and to allow calling the sub without ()'s
+        install_sub($sub_name => sub(;&@) {});
         add_tag_parser($sub_name);
     };
 }
 
-# #
-# # idea: replace 'template' by 'sub RUN'
-# # does not work yet...
-# #
-# sub template_parser {
-#     return sub {
-#         local ($Declarator, $Offset) = @_;
-#         #my $inject_position = $Offset;
-#         # return if (declarator_is_hash_key);
-#         #skip_declarator;
-#         my $linestr = Devel::Declare::get_linestr;
-#         warn "Template. Offset=$Offset, source = " . substr($linestr, $Offset, 10);
-# 
-#         inject('; sub RUN', 8);
-#     }
-# }
 1;

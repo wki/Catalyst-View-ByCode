@@ -2,6 +2,12 @@ Changes C::V::ByCode
 
 ++ Tag.pm -- attr isa HashRef (!) -- no constraint here!
 
+00) internal way of calling blocks / tags:
+  sub block_name(&;@) { ... }
+  sub tag_name(&;@) { ... }
+  block_name { ... } attr => value, ...,; # trailing comma (!)
+  tag_name { ... } attr => value, ...,;   # trailing comma (!)
+
 
 0) Template file  +++ DONE!
     - sub template(&);
@@ -35,7 +41,7 @@ Changes C::V::ByCode
         - if a block is defined in a use()d package,
           find a way to mark a block-sub for creation of a tag_parser
     --> block_name id.class(...) { ... };
-        ==> block_name { ... } ...;
+        ==> block_name { ... } attr => value, ...;
         (definition :: sub block_name(&;%) {...} -- second++ param maybe hash)
     --> CAVEAT: attr() definitions inside block {} will not work as expected
 

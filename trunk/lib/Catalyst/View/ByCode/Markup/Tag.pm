@@ -6,12 +6,12 @@ use HTML::Tagset;
 
 extends 'Catalyst::View::ByCode::Markup::Structured';
 
-subtype 'HashRefOfRef' => as 'HashRef[Ref]';
-subtype 'HashRefOfIdent' => as 'HashRef[Str]'
-    => where { !grep { !m{\A[a-zA-Z][a-zA-Z0-9-_]*\z}xms } keys %$_ };
-coerce 'HashRefOfIdent'
-    => from 'HashRefOfRef'
-    => via { { map { "$_ " } %{$_} } };
+# subtype 'HashRefOfRef' => as 'HashRef[Ref]';
+# subtype 'HashRefOfIdent' => as 'HashRef[Str]'
+#     => where { !grep { !m{\A[a-zA-Z][a-zA-Z0-9-_]*\z}xms } keys %$_ };
+# coerce 'HashRefOfIdent'
+#     => from 'HashRefOfRef'
+#     => via { { map { "$_ " } %{$_} } };
     
 has tag => (
     is => 'rw',
@@ -24,10 +24,11 @@ has attr => (
     metaclass => 'Collection::Hash',
     is => 'rw',
     # isa => 'HashRef[Str]',
-    isa => 'HashRefOfIdent',
+    isa => 'HashRef',
+    # isa => 'HashRefOfIdent',
+    # coerce => 1,
     lazy => 1,
     default => sub { {} },
-    coerce => 1,
     provides => {
         exists => 'has_attr',
         keys   => 'attrs',
