@@ -26,7 +26,6 @@ has include   => (is => 'rw', default => sub { [] });
 #
 #
 
-# use Catalyst::View::ByCode::Helper qw(:markup);
 use Catalyst::View::ByCode::Renderer qw(:markup);
 use Catalyst::Utils;
 use UUID::Random;
@@ -63,7 +62,7 @@ Catalyst::View::ByCode - Templating using pure Perl code
     # REMARK: 
     #    use 'c' instead of '$c'
     #    prefer 'stash->{...}' to 'c->stash->{...}'
-    sub RUN {
+    template {
         html {
             head {
                 title { c->stash->{title} };
@@ -85,7 +84,7 @@ Catalyst::View::ByCode - Templating using pure Perl code
             };
         };
     }
-    # 274 characters without white space
+    # 278 characters without white space
     
     
     # 4) expect to get this HTML generated:
@@ -172,6 +171,22 @@ generates a E<lt>subE<gt> tag
 
 generates a E<lt>supE<gt> tag
 
+=item meta_tag
+
+generates a E<lt>metaE<gt> tag
+
+=item quote
+
+generates a E<lt>qE<gt> tag
+
+=item strike
+
+generates a E<lt>s<gt> tag
+
+=item map_tag
+
+generates a E<lt>mapE<gt> tag
+
 =back
 
 Internally, every tag subroutine is defined with a prototype like
@@ -208,37 +223,19 @@ markup-generating subsystem like C<HTML::FormFu> simple use the <RAW> glob:
 
     print RAW '<?xxx must be here for internal reasons ?>';
 
+=back
+
 =head2 Attributes
 
 As usual for Perl, there is always more than one way to do it:
 
 =over
 
-# OBSOLETED!!!
-# =item prefixing or appending
-# 
-# Every tag may get prefixed or appended by a C<with> method containing all
-# attributes that should go into the opening tag.
-# 
-#     # prefixing
-#     with {id => 'top', 
-#           class => 'noprint silver', 
-#           style => 'display: none'} div {'content'};
-#     
-#     # prefixing using other data types
-#     with {id => 'top', 
-#           class => [qw(noprint silver)], 
-#           style => {display => 'none'}} div {'content'};
-#     
-#     # using 'with' more than once
-#     with {id => 'top'}
-#     with {class => 'noprint silver'}
-#     div {'content'}
-#     with {style => 'display: none'};
-#     
-#     # always generates this:
-#     <div id="top" class="noprint silver" style="display: none">content</div>
+=item old-school perl
 
+    # appending attributes after tag
+    div { ... content ... } id => 'the_id', class => 'some_class';
+    
 =item special content
 
     # using special methods
@@ -265,6 +262,40 @@ As usual for Perl, there is always more than one way to do it:
 =item load
 
 =back
+
+=head2 Building Reusable blocks
+
+You might build a reusable block line the following calls:
+
+    block 'block_name' => sub { ... };
+    
+    # or shorter:
+    block block_name { ... };
+
+The block might get used like a tag:
+
+    block_name { ... some content ... };
+
+If a block-call contains a content it can get rendered inside the block using
+the special sub C<block_content>. A simple example makes this clearer:
+
+    # define a block:
+    block infobox {
+        my $headline = attr('headline') || 'untitled';
+        div.infobox {
+            div.head { $headline };
+            div.info { block_content };
+        };
+    };
+    
+    # later we use the block:
+    infobox(headline => 'Our Info') { 'just my 2 cents' };
+    
+    # this HTML will get generated:
+    <div class="infobox">
+      <div class="head">Our Info</div>
+      <div class="info">just my 2 cents</div>
+    </div>
 
 =head1 CONFIGURATION
 
@@ -315,7 +346,7 @@ sub _handle_die {
     my ($start, $file, $line) = ($msg =~ m{\A (.+ \s at) \s (/.+)\s+ line \s+ (\d+) \.? \s* \z}xmsg);
     
     no strict 'refs';
-    if ($file && $file eq ${"$package\::_tempfile"}) {
+    if ($file && ${"$package\::_tempfile"} && $file eq ${"$package\::_tempfile"}) {
         $line -= ${"$package\::_offset"};
         my $template = $package;
         $template =~ s{\A .+ :: Template}{}xms;
@@ -325,6 +356,35 @@ sub _handle_die {
     }
     
     die $msg;
+}
+
+#
+# intercept warns and correct
+#  - file-name to template
+#  - line-number by subtracting top-added part
+#
+# then log then using Catalyst's logging facility
+#
+# will be called by a curried sub... -- see below
+#
+sub _handle_warn {
+    my $logger = shift;
+    my $msg = shift;
+    
+    my $package = caller(1);
+    my ($start, $file, $line) = ($msg =~ m{\A (.+ \s at) \s (/.+)\s+ line \s+ (\d+) \.? \s* \z}xmsg);
+    
+    no strict 'refs';
+    if ($file && ${"$package\::_tempfile"} && $file eq ${"$package\::_tempfile"}) {
+        $line -= ${"$package\::_offset"};
+        my $template = $package;
+        $template =~ s{\A .+ :: Template}{}xms;
+        $template =~ s{::}{/}xmsg;
+        
+        $msg = "$start Template:$template line $line.\n";
+    }
+    
+    $logger->warn($msg);
 }
 
 =head2 process
@@ -386,10 +446,11 @@ sub process {
         # with the relative path of the wrapper
         #
         local $SIG{__DIE__} = \&_handle_die;
+        local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
+        
         #
         # let automatism work thru the yield-list
         #
-        ### Catalyst::View::ByCode::Helper::yield;
         Catalyst::View::ByCode::Renderer::yield;
     };
     my $output = get_markup();
@@ -579,7 +640,6 @@ use warnings;
 use utf8;
 
 use Devel::Declare();
-### use Catalyst::View::ByCode::Helper qw(:default);
 use Catalyst::View::ByCode::Renderer qw(:default);
 $include
 # subs that are overloaded here would warn otherwise

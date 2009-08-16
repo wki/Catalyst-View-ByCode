@@ -95,7 +95,8 @@ override as_text => sub {
         $result .= ' />';
     }
     
-    ### break_after -- should indent less sometimes, we don't know...
+    # just remember break_after as it should indent less sometimes, 
+    # we cannot decide this here and now
     $$need_break = 1 if ($break_after{$self->tag});
     
     return $result;

@@ -64,13 +64,7 @@ sub append {
     my $self = shift;
     my $content = shift;
 
-    ### ($self->current_tag || $self) -> add_content($content); ### does this work???
-
-    if ($self->has_opened_tag) {
-        $self->current_tag->add_content($content);
-    } else {
-        $self->add_content($content);
-    }
+    ($self->has_opened_tag ? $self->current_tag : $self)->add_content($content);
     
     return;
 }

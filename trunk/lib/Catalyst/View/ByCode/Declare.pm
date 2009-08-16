@@ -145,16 +145,6 @@ sub parse_tag_declaration {
         $extras .= " $proto,";
     }
     
-    # OLD BEHAVIOR -- now add attr's after the block
-    # #
-    # # insert extras into the block
-    # # in doubt creating a new one...
-    # #
-    # if ($extras) {
-    #     inject_into_block(qq{$extras;})
-    #         or inject(qq({$extras;};));
-    # }
-    
     if ($extras) {
         if (next_char eq '{') {
             # block present -- add after block
@@ -237,7 +227,6 @@ sub post_block_inject { # called from a BEGIN {} block at scope start
         
         substr($linestr, $offset, 0) = $inject;
         Devel::Declare::set_linestr($linestr);
-        # warn "after block, o=$offset, line='$linestr'";
     };
 }
 
@@ -298,9 +287,7 @@ sub add_tag_parser {
 # injects ' => sub' after name
 #
 sub block_parser {
-    # warn "install block parser";
     return sub {
-        # warn "running block parser";
         local ($Declarator, $Offset) = @_;
         return if (declarator_is_hash_key);
 
@@ -311,7 +298,7 @@ sub block_parser {
         my $sub_name = skip_word;
         
         # bare-word must be followed by a code-block
-        return if (next_char != '{');
+        return if (next_char ne '{');
         
         inject(' => sub ');
         $Offset += 8;

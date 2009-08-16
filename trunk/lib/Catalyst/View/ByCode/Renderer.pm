@@ -45,7 +45,7 @@ our %change_tags = ('select' => 'choice',
                     'meta'   => 'meta_tag',    # Moose needs &meta()...
                     'q'      => 'quote',
                     's'      => 'strike',
-                    'map'    => 'imgmap',
+                    'map'    => 'map_tag',
 );
 
 ######################################## IMPORT
@@ -58,8 +58,6 @@ sub import {
     my $calling_package = caller;
 
     my $default_export = grep {$_ eq ':default'} @_;
-
-    # warn "bycode: default_export = $default_export, caller=$calling_package";
 
     #
     # build HTML Tag-subs into caller's namespace
@@ -164,11 +162,10 @@ sub block($&) {
 
     no strict 'refs';
     no warnings 'redefine';
-    # push @EXPORT, $name; ### WRONG: done at compile-time in ::Declare::install_sub()
-    *{"$package\::$name"} = sub(;&) {
+    *{"$package\::$name"} = sub(;&@) {
         local $block_content = shift;
         
-        $document->open_tag();
+        $document->open_tag('', @_);
         $document->add_text($code->()) if ($code);
         $document->close_tag();
     };
@@ -294,20 +291,6 @@ sub yield(;*@) {
 
     return;
 }
-
-# #
-# # the outside view of _collect to expand things
-# # sub my_testblock(;&@) {
-# #    my $code = shift;
-# #    apply { my $element = shift; # a hashref for a pseudo-tag (tag=undef)
-# #            ... some code using @_ ...
-# #            $code->() if ($code); 
-# #    } @_;
-# # }
-# #
-# ### FIXME: does not work now.   
-# sub apply(&;@) { # _handle_component(undef, undef, @_); 
-# }
 
 #
 # set attribute(s) of latest open tag (instead of 'with' outside)
