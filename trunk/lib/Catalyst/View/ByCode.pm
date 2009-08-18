@@ -2,8 +2,10 @@ package Catalyst::View::ByCode;
 
 use Moose;
 extends 'Catalyst::View';
+with 'Catalyst::Component::ApplicationAttribute';
 
 has extension => (is => 'rw', default => '.pl');
+# has root_dir  => (is => 'rw', default => sub { $_[0]->_application->path_to('root/bycode') });
 has root_dir  => (is => 'rw', default => 'root/bycode');
 has wrapper   => (is => 'rw', default => 'wrapper.pl');
 has include   => (is => 'rw', default => sub { [] });
@@ -512,6 +514,7 @@ sub _find_template {
     my $start_dir = shift || '';
     
     my $root_dir = $c->path_to($self->root_dir);
+    # my $root_dir = $self->root_dir;
     my $ext = $self->extension;
     $ext =~ s{\A \.+}{}xms;
     my $count = 100; # prevent endless loops in case of logic errors
@@ -586,6 +589,7 @@ sub _compile_template {
     if (!$full_path || !$file_mtime) {
         # we don't know the template or it has vanished somehow
         my $full_path = $c->path_to($self->root_dir, $template_path);
+        # my $full_path = $self->root_dir . '/' . $template_path;
         if (-f $full_path) {
             # found!
             # $c->log->debug(qq/found template "$template_path"/) if $c->debug;

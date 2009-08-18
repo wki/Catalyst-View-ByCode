@@ -17,7 +17,7 @@ can_ok('Catalyst::View::ByCode' => qw(extension root_dir wrapper include process
 
 # instantiate
 my $view;
-lives_ok { $view = Catalyst->setup_component('Catalyst::View::ByCode') } 'setup view worked';
+lives_ok { $view = $c->setup_component('Catalyst::View::ByCode') } 'setup view worked';
 isa_ok($view, 'Catalyst::View::ByCode', 'view class looks good');
 
 # check default attributes
