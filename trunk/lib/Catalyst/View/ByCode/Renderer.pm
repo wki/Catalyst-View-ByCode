@@ -1,4 +1,4 @@
-package Catalyst::View::ByCode::Renderer; ## replacement for Helper
+package Catalyst::View::ByCode::Renderer;
 use strict;
 use warnings;
 use base qw(Exporter);
@@ -18,10 +18,11 @@ our @EXPORT     = qw(template block block_content
                      class id on
                      stash c _
                      doctype
+                     nbsp
                     );
 our %EXPORT_TAGS = (
     markup  => [qw(clear_markup init_markup get_markup markup_object)],
-    default => [@EXPORT, @EXPORT_OK],
+    default => [@EXPORT],
 );
 
 #
@@ -36,6 +37,7 @@ our $block_content; # code for executing &content()
 #
 # some tags get changed by simply renaming them
 #
+#                   'html tag'  'sub name'
 our %change_tags = ('select' => 'choice',
                     'link'   => 'link_tag',
                     'tr'     => 'trow',
@@ -130,7 +132,7 @@ sub init_markup {
 }
 
 sub get_markup {
-    return $document ? $document->as_text : '';
+    return $document ? $document->as_string : '';
 }
 
 sub markup_object {
@@ -200,21 +202,23 @@ sub load {
         # simple static CSS inserted just here and now
         #
         foreach my $path (@_) {
-            $document->add_tag(link => {
-                    rel  => 'stylesheet',
-                    type => 'text/css',
-                    href => $path,
-            });
+            $document->add_tag(
+                'link',
+                rel  => 'stylesheet',
+                type => 'text/css',
+                href => $path,
+            );
         }
     } elsif ($kind eq 'js') {
         #
         # simple static JS inserted just here and now
         #
         foreach my $path (@_) {
-            $document->add_tag(script => {
-                    type => 'text/javascript',
-                    src  => $path,
-            });
+            $document->add_tag(
+                'script',
+                type => 'text/javascript',
+                src  => $path,
+            );
         }
     } elsif ((my $controller = $c->controller($kind)) &&
              ($kind eq 'Js' || $kind eq 'Css')) {
@@ -225,20 +229,18 @@ sub load {
         # $c->log->debug("LOAD: kind=$kind, ref(controller)=" . ref($controller));
         
         if ($kind eq 'Css') {
-            $document->add_tag(link => {
-                    rel  => 'stylesheet',
-                    type => 'text/css',
-                    href => sub {
-                        $c->uri_for($controller->action_for('default'), @_);
-                    },
-            });
+            $document->add_tag(
+                'link',
+                rel  => 'stylesheet',
+                type => 'text/css',
+                href => $c->uri_for($controller->action_for('default'), @_),
+            );
         } else {
-            $document->add_tag(script => {
-                    type => 'text/javascript',
-                    src  => sub {
-                        $c->uri_for($controller->action_for('default'), @_);
-                    },
-            });
+            $document->add_tag(
+                'script',
+                type => 'text/javascript',
+                src  => $c->uri_for($controller->action_for('default'), @_),
+            );
         }
     }
     
@@ -393,6 +395,8 @@ sub _handle_tag {
     $document->add_text($code->(@_)) if ($code);
     $document->close_tag($tag_name);
 }
+
+sub nbsp { "\x{00a0}" } # bac hack in the moment...
 
 #
 # define a function for every tag into a given namespace

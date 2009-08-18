@@ -8,9 +8,9 @@ has content => (
     default => '',
 );
 
-use overload '""' => sub { $_[0]->as_text() }, fallback => 1;
+use overload '""' => sub { $_[0]->as_string() }, fallback => 1;
 
-sub as_text { $_[0]->content }
+sub as_string { $_[0]->content }
 
 sub _html_escape {
     my ($self, $text) = @_;

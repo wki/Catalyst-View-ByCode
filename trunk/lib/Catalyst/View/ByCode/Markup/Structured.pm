@@ -15,12 +15,12 @@ has content => (
     },
 );
 
-override as_text => sub {
+override as_string => sub {
     my $self = shift;
     my $indent_level = shift || 0;
     my $need_break = shift;
 
-    return join('', map {$_->as_text($indent_level+1, $need_break)} @{$self->content});
+    return join('', map {$_->as_string($indent_level+1, $need_break)} @{$self->content});
 };
 
 no Moose;

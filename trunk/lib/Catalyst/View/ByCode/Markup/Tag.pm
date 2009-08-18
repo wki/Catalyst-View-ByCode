@@ -23,8 +23,8 @@ has tag => (
 has attr => (
     metaclass => 'Collection::Hash',
     is => 'rw',
-    # isa => 'HashRef[Str]',
-    isa => 'HashRef',
+    isa => 'HashRef[Str]',
+    # isa => 'HashRef',
     # isa => 'HashRefOfIdent',
     # coerce => 1,
     lazy => 1,
@@ -56,10 +56,51 @@ our %break_within =
 
 our $INDENT_STEP = 2;
 
+sub BUILD {
+    my $self = shift;
+    _stringify_attr_values($self->attr);
+}
+
+#
+# attr setting
+#
+around set_attr => sub {
+    my $orig = shift;
+    my $self = shift;
+    my %attr = @_;
+    
+    # warn "in 'around set_attr'...";
+
+    _stringify_attr_values(\%attr);
+    
+    $orig->($self, %attr);
+};
+
+#
+# helper: stringify attr values
+#
+sub _stringify_attr_values {
+    my $attr = shift; # \%attr
+    
+    # warn "stringifying attr values";
+    foreach my $key (keys(%{$attr})) {
+        my $value = $attr->{$key};
+        if (!ref($value)) {
+            # do nothing
+        } elsif (ref($value) eq 'ARRAY') {
+            $attr->{$key} = join(' ', @{$value});
+        } elsif (ref($value) eq 'HASH') {
+            $attr->{$key} = join(';', map {"$_:$value->{$_}"} keys(%{$value}));
+        } else {
+            $attr->{$key} = "$value";
+        }
+    }
+}
+
 #
 # rendering
 #
-override as_text => sub {
+override as_string => sub {
     my $self = shift;
     my $indent_level = shift || 0;
     my $need_break = shift;

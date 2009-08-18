@@ -13,7 +13,7 @@ BEGIN { use_ok('Catalyst::View::ByCode::Markup::Element') };
 my $e;
 lives_ok { $e = new Catalyst::View::ByCode::Markup::Element() } 'empty new element lives';
 isa_ok($e, 'Catalyst::View::ByCode::Markup::Element', 'class is OK');
-can_ok($e, qw(content as_text _html_escape));
+can_ok($e, qw(content as_string _html_escape));
 is($e->content, '', 'content is empty');
 is("$e", '', 'stringified content is empty');
 
@@ -29,5 +29,5 @@ is($e->_html_escape('<hello, "you"'), '&#60;hello, &#34;you&#34;', 'escaping "<h
 #
 $e->content('huhu');
 is($e->content, 'huhu', 'content is right');
-is($e->as_text, 'huhu', 'as_text is right');
+is($e->as_string, 'huhu', 'as_string is right');
 is("x${e}x", 'xhuhux', 'stringified content is right');

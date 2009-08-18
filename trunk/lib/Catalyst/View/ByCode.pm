@@ -461,24 +461,25 @@ sub process {
     return 1; # indicate success
 }
 
-=head2 render
-
-render the request
-
-=cut
-
-sub render {
-    my $self = shift;
-    my $c = shift;
-    my $template = shift;
-    my $args = shift;
-    
-    $c->log->debug("Rendering template '$template'") if $c->debug;
-    
-    my $sub = $self->_compile_template($c,$template);
-    
-    $sub->($c) if ($sub);
-}
+# DEAD CODE
+# =head2 render
+# 
+# render the request
+# 
+# =cut
+# 
+# sub render {
+#     my $self = shift;
+#     my $c = shift;
+#     my $template = shift;
+#     my $args = shift;
+#     
+#     $c->log->debug("Rendering template '$template'") if $c->debug;
+#     
+#     my $sub = $self->_compile_template($c,$template);
+#     
+#     $sub->($c) if ($sub);
+# }
 
 #
 # convert a template filename to a package name
@@ -507,10 +508,11 @@ sub _find_template {
     my $template = shift;  # relative path
     my $start_dir = shift || '';
     
-    my $root_dir = $self->root_dir;
+    my $root_dir = $c->path_to($self->root_dir);
     my $ext = $self->extension;
     $ext =~ s{\A \.+}{}xms;
-    while (1) {
+    my $count = 100; # prevent endless loops in case of logic errors
+    while (--$count > 0) {
         if (-f "$root_dir/$start_dir/$template") {
             # we found it
             return $start_dir ? "$start_dir/$template" : $template;
@@ -519,7 +521,7 @@ sub _find_template {
             return $start_dir ? "$start_dir/$template.$ext" : "$template.$ext";
         }
         last if (!$start_dir);
-        $start_dir =~ s{/?[^/]*/?\z}{}xms;
+        $start_dir =~ s{/*[^/]*/*\z}{}xms;
     };
     
     #
@@ -537,8 +539,8 @@ sub _compile_template {
     my $template = shift;
     my $sub_name = shift || 'RUN';
     
-    return if (!$template);
-    $c->log->debug("compiling: $template");
+    return 42 if (!$template);
+    $c->log->debug("compiling: $template") if $c->debug;
     
     #
     # convert between path and package
@@ -562,12 +564,13 @@ sub _compile_template {
         $template_package =~ s{\.\w+\z}{}xms;
     }
     # $template_path = $self->root_dir . "/$template_path";
-    
+
     #
     # see if we know the package
     #
-    my $package_prefix = Catalyst::Utils::class2appclass($self);
-    my $package = "$package_prefix\::Template::$template_package";
+    #my $package_prefix = Catalyst::Utils::class2appclass($self);
+    #my $package = "$package_prefix\::Template::$template_package";
+    my $package = $self->_template_to_package($c, $template_path);
 
     no strict 'refs';
     my $full_path = ${"$package\::_filename"};
@@ -579,10 +582,11 @@ sub _compile_template {
     
     if (!$full_path || !$file_mtime) {
         # we don't know the template or it has vanished somehow
-        if (-f $self->root_dir . "/$template_path") {
+        my $full_path = $c->path_to($self->root_dir, $template_path);
+        if (-f $full_path) {
             # found!
             # $c->log->debug(qq/found template "$template_path"/) if $c->debug;
-            $self->__compile($c, $self->root_dir . "/$template_path" => $package);
+            $self->__compile($c, "$full_path" => $package);
         }
     } elsif ($file_mtime != $package_mtime) {
         # we need a recompile
@@ -601,7 +605,7 @@ sub __compile {
     my $path = shift;
     my $package = shift;
 
-    $c->log->debug("compile template :: $path --> $package") if ($c->debug);
+    $c->log->debug("compile template :: $path --> $package") if $c->debug;
     
     #
     # clear target package's namespace before we start
@@ -651,30 +655,16 @@ PERL
 
     $code .= "\n$file_contents;\n\n1;\n";
     
-    my $tempfile = Path::Class::File->new(File::Spec->tmpdir,
-                                          UUID::Random::generate . '.pl');
-    $c->log->debug("tempfile = $tempfile") if ($c->debug);
-    open(my $tmp, '>', $tempfile);
-    print $tmp $code;
-    close($tmp);
-    
     #
-    # compile that
     # Devel::Declare does not work well with eval()'ed code...
     #                thus, we need to save into a TEMP-file
     #
-    #eval "do '$tempfile'";
-    do $tempfile;
-    unlink $tempfile;
-    if ($@) {
-        #
-        # error during compile
-        #
-        # warn "ERROR: $@";
-        $c->log->error(qq/compile error: $@/);
-        return; ### FIXME: throwing an error is better
-    }
-    $c->log->debug('compiling done');
+    my $tempfile = Path::Class::File->new(File::Spec->tmpdir,
+                                          UUID::Random::generate . '.pl');
+    $c->log->debug("tempfile = $tempfile") if $c->debug;
+    open(my $tmp, '>', $tempfile);
+    print $tmp $code;
+    close($tmp);
     
     #
     # create some magic _variables
@@ -686,6 +676,20 @@ PERL
     ${"$package\::_tempfile"} = "$tempfile";
     use strict 'refs';
 
+    #
+    # compile that
+    #
+    do $tempfile;
+    unlink $tempfile;
+    if ($@) {
+        #
+        # error during compile
+        #
+        $c->log->error(qq/compile error: $@/);
+        return; ### FIXME: throwing an error is better
+    }
+    $c->log->debug('compiling done') if $c->debug;
+    
     #
     # done
     #

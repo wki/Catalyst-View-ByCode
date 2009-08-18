@@ -2,7 +2,7 @@ package Catalyst::View::ByCode::Markup::EscapedText;
 use Moose;
 extends 'Catalyst::View::ByCode::Markup::Element';
 
-override as_text => sub {
+override as_string => sub {
     return $_[0]->_html_escape(super());
 
     # my $self = shift;

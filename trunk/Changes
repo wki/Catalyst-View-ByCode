@@ -1,7 +1,12 @@
 Revision history for Catalyst-View-ByCode
 
-        2009-08-12
+0.04    2009-08-12
         * started rewriting the markup engine using Moose
+        * defining main sub with template {...}; now
+        * allow creation of blocks like block some_name => {...};
+        * block_content() sub for renderung block's coderef
+        * attr() is getter and setter now
+        * tests for most modules
 
 0.03    2009-07-18
         * expanded markup syntax by using some Devel::Declare tricks

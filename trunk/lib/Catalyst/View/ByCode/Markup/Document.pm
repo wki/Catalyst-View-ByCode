@@ -20,12 +20,12 @@ has tag_stack => (
     },
 );
 
-override as_text => sub {
+override as_string => sub {
     my $self = shift;
     # ignore indentation my $indent_level = shift || 0;
 
     my $need_break = 1;
-    return join('', map {$_->as_text(0, \$need_break)} @{$self->content});
+    return join('', map {$_->as_string(0, \$need_break)} @{$self->content});
 };
 
 sub open_tag {
