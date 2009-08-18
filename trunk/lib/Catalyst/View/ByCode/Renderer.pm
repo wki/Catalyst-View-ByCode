@@ -168,6 +168,7 @@ sub block($&) {
         local $block_content = shift;
         
         $document->open_tag('', @_);
+        ### TODO: add $document->current_tag into $code->() call maybe
         $document->add_text($code->()) if ($code);
         $document->close_tag();
     };

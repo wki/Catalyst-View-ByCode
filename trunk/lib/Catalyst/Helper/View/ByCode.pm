@@ -57,10 +57,13 @@ __PACKAGE__->config(
     # extension => '.pl',
     # 
     # # Set the location for .pl files
-    # root_dir => [% app %]->path_to( 'root', 'bycode' ),
+    # root_dir => 'root/bycode',
     # 
     # # This is your wrapper template located in the 'root/src'
     # wrapper => 'wrapper.pl',
+    #
+    # # specify packages to use in every template
+    # include => [ qw(My::Package::Name Other::Package::Name) ]
 );
 
 =head1 NAME
@@ -70,6 +73,11 @@ __PACKAGE__->config(
 =head1 DESCRIPTION
 
 ByCode View for [% app %]. 
+
+=head1 METHODS
+=cut
+
+
 
 =head1 SEE ALSO
 

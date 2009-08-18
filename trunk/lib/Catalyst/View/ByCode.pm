@@ -48,6 +48,7 @@ Catalyst::View::ByCode - Templating using pure Perl code
     sub index :Path :Args(0) {
         my ($self, $c) = @_;
         
+        # unless defined as default_view in your config, specify:
         $c->stash->{current_view} = 'ByCode';
         
         $c->stash->{title} = 'Hello ByCode';
@@ -299,7 +300,7 @@ the special sub C<block_content>. A simple example makes this clearer:
 
 =head1 CONFIGURATION
 
-A simple configuration of a dereived Controller could look like this:
+A simple configuration of a derived Controller could look like this:
 
     __PACKAGE__->config(
         # Change extension (default: .pl)
@@ -501,6 +502,8 @@ sub _template_to_package {
 #
 # helper: find a given template
 #     returns: relative path to template (including extension)
+#
+# FIXME: is it wise to always climb up the directory? Think!
 #
 sub _find_template {
     my $self = shift;
