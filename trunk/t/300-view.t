@@ -1,4 +1,4 @@
-use Test::More tests => 20;
+use Test::More tests => 21;
 use Test::Exception;
 use Catalyst ();
 use FindBin;
@@ -39,6 +39,8 @@ is($view->_template_to_package($c, 'simple_template'), 'Catalyst::Template::simp
 # test compilation
 #
 my $subref;
+dies_ok {$subref = $view->_compile_template($c, 'erroneous_template.pl') } 'compilation dies';
+
 lives_ok { $subref = $view->_compile_template($c, 'simple_template.pl') } 'compilation lives';
 is(ref($subref), 'CODE', 'compile result is a CODEref');
 

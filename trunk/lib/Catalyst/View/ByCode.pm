@@ -346,19 +346,7 @@ sub _handle_die {
     die $msg if (ref($msg)); # exceptions will forward...
     
     my $package = caller();
-    my ($start, $file, $line) = ($msg =~ m{\A (.+ \s at) \s (/.+)\s+ line \s+ (\d+) \.? \s* \z}xmsg);
-    
-    no strict 'refs';
-    if ($file && ${"$package\::_tempfile"} && $file eq ${"$package\::_tempfile"}) {
-        $line -= ${"$package\::_offset"};
-        my $template = $package;
-        $template =~ s{\A .+ :: Template}{}xms;
-        $template =~ s{::}{/}xmsg;
-        
-        $msg = "$start Template:$template line $line.\n";
-    }
-    
-    die $msg;
+    die _correct_message($package, $msg);
 }
 
 #
@@ -375,19 +363,30 @@ sub _handle_warn {
     my $msg = shift;
     
     my $package = caller(1);
-    my ($start, $file, $line) = ($msg =~ m{\A (.+ \s at) \s (/.+)\s+ line \s+ (\d+) \.? \s* \z}xmsg);
+    $logger->warn(_correct_message($package, $msg));
+}
+
+#
+# common handling for warn- and error-verbosing
+#
+sub _correct_message {
+    my $package = shift;
+    my $msg = shift;
+
+    my ($start, $file, $line, $end) = ($msg =~ m{\A (.+? \s at) \s (/.+?)\s+ line \s+ (\d+) \s* (.*) \z}xmsg);
     
     no strict 'refs';
     if ($file && ${"$package\::_tempfile"} && $file eq ${"$package\::_tempfile"}) {
-        $line -= ${"$package\::_offset"};
+        my $offset = ${"$package\::_offset"};
         my $template = $package;
         $template =~ s{\A .+ :: Template}{}xms;
         $template =~ s{::}{/}xmsg;
         
-        $msg = "$start Template:$template line $line.\n";
+        # replace all file-names and line-numbers
+        $msg =~ s{at \s+ /.+? \s+ line \s+ (\d+)}{sprintf "at Template:$template line %d", $1-$offset}exmsg;
     }
     
-    $logger->warn($msg);
+    return $msg;
 }
 
 =head2 process
@@ -399,6 +398,13 @@ fulfill the request (called from Catalyst)
 sub process {
     my $self = shift;
     my $c = shift;
+
+    #
+    # beautify dies by replacing our strange file names
+    # with the relative path of the wrapper
+    #
+    local $SIG{__DIE__} = \&_handle_die;
+    local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
     
     #
     # must render - find template and wrapper
@@ -444,12 +450,12 @@ sub process {
     $c->stash->{yield_list} = \@yield_list;
     init_markup($self, $c);
     {
-        #
-        # beautify dies by replacing our strange file names
-        # with the relative path of the wrapper
-        #
-        local $SIG{__DIE__} = \&_handle_die;
-        local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
+        # #
+        # # beautify dies by replacing our strange file names
+        # # with the relative path of the wrapper
+        # #
+        # local $SIG{__DIE__} = \&_handle_die;
+        # local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
         
         #
         # let automatism work thru the yield-list
@@ -678,7 +684,7 @@ PERL
     #
     no strict 'refs';
     ${"$package\::_filename"} = $path;
-    ${"$package\::_offset"}   = $header_lines;
+    ${"$package\::_offset"}   = $header_lines + 1;
     ${"$package\::_mtime"}    = $mtime;
     ${"$package\::_tempfile"} = "$tempfile";
     use strict 'refs';
@@ -692,8 +698,8 @@ PERL
         #
         # error during compile
         #
-        $c->log->error(qq/compile error: $@/);
-        return; ### FIXME: throwing an error is better
+        $c->error('compile error: ' . _correct_message($package, $@));
+        #die "compile error ($package)";
     }
     $c->log->debug('compiling done') if $c->debug;
     
