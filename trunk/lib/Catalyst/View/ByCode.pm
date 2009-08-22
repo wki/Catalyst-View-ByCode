@@ -36,6 +36,8 @@ use File::Spec;
 
 our $VERSION = '0.04';
 
+our $compiling_package; # local() ized during a compile
+
 =head1 NAME
 
 Catalyst::View::ByCode - Templating using pure Perl code
@@ -345,7 +347,7 @@ sub _handle_die {
     my $msg = shift;
     die $msg if (ref($msg)); # exceptions will forward...
     
-    my $package = caller();
+    my $package = $compiling_package || caller();
     die _correct_message($package, $msg);
 }
 
@@ -362,7 +364,7 @@ sub _handle_warn {
     my $logger = shift;
     my $msg = shift;
     
-    my $package = caller(1);
+    my $package = $compiling_package || caller(1);
     $logger->warn(_correct_message($package, $msg));
 }
 
@@ -401,7 +403,7 @@ sub process {
 
     #
     # beautify dies by replacing our strange file names
-    # with the relative path of the wrapper
+    # with the relative path of the wrapper or template
     #
     local $SIG{__DIE__} = \&_handle_die;
     local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
@@ -449,46 +451,14 @@ sub process {
     $c->stash->{yield} ||= {};
     $c->stash->{yield_list} = \@yield_list;
     init_markup($self, $c);
-    {
-        # #
-        # # beautify dies by replacing our strange file names
-        # # with the relative path of the wrapper
-        # #
-        # local $SIG{__DIE__} = \&_handle_die;
-        # local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
-        
-        #
-        # let automatism work thru the yield-list
-        #
-        Catalyst::View::ByCode::Renderer::yield;
-    };
-    my $output = get_markup();
-    clear_markup;
     
-    $c->response->body($output);
+    Catalyst::View::ByCode::Renderer::yield;
+    
+    $c->response->body(get_markup());
+    clear_markup;
     
     return 1; # indicate success
 }
-
-# DEAD CODE
-# =head2 render
-# 
-# render the request
-# 
-# =cut
-# 
-# sub render {
-#     my $self = shift;
-#     my $c = shift;
-#     my $template = shift;
-#     my $args = shift;
-#     
-#     $c->log->debug("Rendering template '$template'") if $c->debug;
-#     
-#     my $sub = $self->_compile_template($c,$template);
-#     
-#     $sub->($c) if ($sub);
-# }
 
 #
 # convert a template filename to a package name
@@ -551,7 +521,7 @@ sub _compile_template {
     my $template = shift;
     my $sub_name = shift || 'RUN';
     
-    return 42 if (!$template);
+    return 42 if (!$template); # 42 is not a code-ref (!)
     $c->log->debug("compiling: $template") if $c->debug;
     
     #
@@ -578,10 +548,8 @@ sub _compile_template {
     # $template_path = $self->root_dir . "/$template_path";
 
     #
-    # see if we know the package
+    # see if we already know the package
     #
-    #my $package_prefix = Catalyst::Utils::class2appclass($self);
-    #my $package = "$package_prefix\::Template::$template_package";
     my $package = $self->_template_to_package($c, $template_path);
 
     no strict 'refs';
@@ -617,7 +585,10 @@ sub __compile {
     my $c = shift;
     my $path = shift;
     my $package = shift;
-
+    
+    # allow meaningful warnings during compile
+    local $compiling_package = $package;
+    
     $c->log->debug("compile template :: $path --> $package") if $c->debug;
     
     #
@@ -636,7 +607,7 @@ sub __compile {
         $file_contents = <$file>;
         close($file);
     } else {
-        $c->log->error('Error opening file');
+        $c->log->error('Error opening template file $file');
         return; ### FIXME: throw exception is better
     }
 
@@ -692,7 +663,7 @@ PERL
     #
     # compile that
     #
-    do $tempfile;
+    my $compile_result = do $tempfile;
     unlink $tempfile;
     if ($@) {
         #
@@ -700,6 +671,11 @@ PERL
         #
         $c->error('compile error: ' . _correct_message($package, $@));
         #die "compile error ($package)";
+    } elsif (!$compile_result) {
+        #
+        # compiled template did not return a true value
+        #
+        $c->error("Template $package did not return a true value");
     }
     $c->log->debug('compiling done') if $c->debug;
     

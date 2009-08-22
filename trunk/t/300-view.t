@@ -1,4 +1,4 @@
-use Test::More tests => 21;
+use Test::More tests => 22;
 use Test::Exception;
 use Catalyst ();
 use FindBin;
@@ -20,6 +20,7 @@ my $view;
 lives_ok { $view = $c->setup_component('Catalyst::View::ByCode') } 'setup view worked';
 isa_ok($view, 'Catalyst::View::ByCode', 'view class looks good');
 
+### test only ::: is($view->_application->path_to('root'), 'adsf', 'bla');
 # check default attributes
 is($view->extension, '.pl', 'extension looks good');
 is($view->root_dir,  'root/bycode', 'root_dir looks good');
@@ -39,7 +40,8 @@ is($view->_template_to_package($c, 'simple_template'), 'Catalyst::Template::simp
 # test compilation
 #
 my $subref;
-dies_ok {$subref = $view->_compile_template($c, 'erroneous_template.pl') } 'compilation dies';
+lives_ok {$subref = $view->_compile_template($c, 'erroneous_template.pl') } 'compilation 1 lives';
+ok(!$subref, 'result of compilation is not a subref');
 
 lives_ok { $subref = $view->_compile_template($c, 'simple_template.pl') } 'compilation lives';
 is(ref($subref), 'CODE', 'compile result is a CODEref');
