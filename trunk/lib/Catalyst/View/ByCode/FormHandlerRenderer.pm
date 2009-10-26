@@ -31,7 +31,7 @@ In your Form class:
 
 In a template:
 
-   stash->{form}.render;
+   stash->{form}->render;
 
 or for individual fields:
 
@@ -154,7 +154,7 @@ sub render {
             $self->render_fields;
         }
         '';
-    }
+    };
 }
 
 sub render_fields {

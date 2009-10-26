@@ -70,7 +70,7 @@ Catalyst::View::ByCode - Templating using pure Perl code
     template {
         html {
             head {
-                title { c->stash->{title} };
+                title { stash->{title} };
                 load Js => 'site.js';
                 load Css => 'site.js';
             };
@@ -82,14 +82,14 @@ Catalyst::View::ByCode - Templating using pure Perl code
                     };
                 };
                 div content {
-                    h1 { c->stash->{title} };
-                    div { 'hello.pl is running! };
+                    h1 { stash->{title} };
+                    div { 'hello.pl is running!' };
                     img(src => '/static/images/catalyst_logo.png');
                 };
             };
         };
     }
-    # 278 characters without white space
+    # 273 characters without white space
     
     
     # 4) expect to get this HTML generated:
