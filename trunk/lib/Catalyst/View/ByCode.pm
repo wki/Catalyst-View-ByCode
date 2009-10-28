@@ -19,6 +19,7 @@ has include   => (is => 'rw', default => sub { [] });
 # Stash Variables:
 #    template => 'path/to/template'
 #    yield => { name => 'path/to/yield' }
+#       ### FIXME: remove yield_list, replace with yield->{content}
 #    yield_list => [ wrapper, template ]
 #    wrapper => 'path/to/wrapper'
 #
@@ -324,18 +325,19 @@ A simple configuration of a derived Controller could look like this:
 sub BUILD {
     my $self = shift;
     
-    #my $c = $self->_app;
-    if (exists($self->config->{extension})) {
-        $self->extension($self->config->{extension});
-    }
-    if (exists($self->config->{root_dir})) {
-        $self->root_dir($self->config->{root_dir});
-    }
-    #$c->log->warn("directory '" . $self->root_dir . "' not present.")
-    #    if (!-d $c->path_to('root', $self->root_dir));
-    if (exists($self->config->{wrapper})) {
-        $self->wrapper($self->config->{wrapper});
-    }
+    # no need to do that -- C::Component does it for us!!!
+    # #my $c = $self->_app;
+    # if (exists($self->config->{extension})) {
+    #     $self->extension($self->config->{extension});
+    # }
+    # if (exists($self->config->{root_dir})) {
+    #     $self->root_dir($self->config->{root_dir});
+    # }
+    # #$c->log->warn("directory '" . $self->root_dir . "' not present.")
+    # #    if (!-d $c->path_to('root', $self->root_dir));
+    # if (exists($self->config->{wrapper})) {
+    #     $self->wrapper($self->config->{wrapper});
+    # }
 }
 
 #
@@ -375,10 +377,16 @@ sub _correct_message {
     my $package = shift;
     my $msg = shift;
 
-    my ($start, $file, $line, $end) = ($msg =~ m{\A (.+? \s at) \s (/.+?)\s+ line \s+ (\d+) \s* (.*) \z}xmsg);
+    my ($start, $file, $line, $end)
+     = ($msg =~ m{\A (.+? \s at) \s (/.+?)\s+ line \s+ (\d+) \s* (.*) \z}xmsg);
     
     no strict 'refs';
-    if ($file && ${"$package\::_tempfile"} && $file eq ${"$package\::_tempfile"}) {
+    if ($file && 
+        ${"$package\::_tempfile"} && 
+        $file eq ${"$package\::_tempfile"}) {
+        #
+        # exception/warning inside a template
+        #
         my $offset = ${"$package\::_offset"};
         my $template = $package;
         $template =~ s{\A .+ :: Template}{}xms;

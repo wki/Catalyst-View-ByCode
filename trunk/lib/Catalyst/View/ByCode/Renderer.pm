@@ -290,6 +290,7 @@ sub yield(;*@) {
                || caller->can($yield_name);
     }
 
+    ### FIXME: if $sub === ARRAY ---> repeat until array is empty
     $sub->(@_) if ($sub && ref($sub) eq 'CODE');
 
     return;
