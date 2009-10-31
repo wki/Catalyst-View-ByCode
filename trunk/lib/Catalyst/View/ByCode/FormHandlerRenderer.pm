@@ -25,7 +25,7 @@ and maintain backwards compatibility.
 In your Form class:
 
    package MyApp::Form::Silly;
-   use Moose;
+   use HTML::FormHandler::Moose;
    extends 'HTML::FormHandler::Model::DBIC';
    with 'Catalyst::View::ByCode::FormHandlerRenderer';
 
@@ -164,7 +164,7 @@ sub render_fields {
     $self->render_field($_, $show_raw) for $self->sorted_fields;
     
     if ($show_raw) {
-        foreach my $field (grep {$_} map {$_->errors} ($self->sorted_fields)) {
+        foreach my $field (grep {$_} map {@{$_->errors}} ($self->sorted_fields)) {
             span.error_message { $field };
         }
     }
@@ -204,14 +204,14 @@ sub render_field {
                 };
                 
                 $self->$field_method($field);
-                span.error_message { $_ } for $field->errors;
+                span.error_message { $_ } for @{$field->errors};
             } elsif ($l_type eq 'legend') {
                 fieldset {
                     class $field->html_name;
                     legend { $field->label };
                     
                     $self->$field_method($field);
-                    span.error_message { $_ } for $field->errors;
+                    span.error_message { $_ } for @{$field->errors};
                 }
             } else {
                 $self->$field_method($field);
@@ -354,7 +354,7 @@ sub render_submit {
    input(type => 'submit') {
        id $field->id;
        attr name => $field->html_name;
-       attr value => $field->fif || '';
+       attr value => $field->fif || $field->value || '';
    };
 }
 
