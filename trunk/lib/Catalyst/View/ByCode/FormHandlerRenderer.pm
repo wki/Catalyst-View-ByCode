@@ -196,8 +196,10 @@ sub render_field {
         div {
             class \@class if (scalar(@class));
             
-            my $l_type = defined $self->get_label_type( $field->widget ) ? $self->get_label_type( $field->widget ) : '';
-            if ($l_type eq 'label'){
+            my $l_type = defined $self->get_label_type( $field->widget )
+                         ? $self->get_label_type( $field->widget )
+                         : '';
+            if ($l_type eq 'label') {
                 label.label {
                     attr for => $field->id;
                     $field->label . ': ';
@@ -357,6 +359,8 @@ sub render_submit {
        attr value => $field->fif || $field->value || '';
    };
 }
+
+### TODO: render_reset / render_upload / render_norender ???
 
 =head1 AUTHORS
 
