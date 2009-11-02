@@ -44,6 +44,7 @@ sub render_fields {
     
     foreach my $fld_result ( $result->results ) {
         die "no field in result for " . $fld_result->name unless $fld_result->field_def;
+        warn ref($fld_result);
         pre { $fld_result->render };
     }
 }
