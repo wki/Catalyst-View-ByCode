@@ -50,7 +50,7 @@ Changes C::V::ByCode
       block_name id.class(attr_name => attr_value, ...) { ... block_content ...};
 
 
-3) extensions to known sub's
+3) extensions to known sub's  +++ DONE
     - getters: attr('xxx')       id()        class()
     - setters: attr('xxx', 42)   id('bla')   class('foo')
 
@@ -61,12 +61,14 @@ Changes C::V::ByCode
    - yield() --> yields 'content'
    - if ref(yield_name) eq 'ARRAY' --> continue until array is empty
      --> yield-names act as hooks for generating stuff sometimes...
+
    
-5) enhance form handling
-   - find a way to set widget_name_space / widget_form / widget_wrapper
-     in a cool and clever way (Role C::V::B::FormHandlerRenderer ???)
-   - freshly define H::F::Field::*, H::F::Form::*, H::F::Wrapper::*
-     to match our needs.
+5) enhance form handling  +++ 'render' handling DONE
+   - everything so far was nonsense. WE SIMPLY DO NOTHING.
+   - magic handling via: div { stash->{form} };
+     Trick: print OUT/RAW handles obj-refs specially
+       $obj->can('render') --> do it
+       $obj->can('to_string') ??? other names ???
 
 
 6) example:
@@ -74,10 +76,14 @@ Changes C::V::ByCode
 block draw_nav {
     my $navigation = attr('navigation');
     my $selected = attr('selected');
+    my $id = attr('id');
+    my $class = attr('class');
     return if (!$navigation);
     
     ul {
-        class $attr->{id};
+        id $id if ($id);
+        class $class if ($class);
+        
         foreach my $nav (@{$navigation}) {
             li {
                 a(href => nav_uri($nav->parent
@@ -86,7 +92,7 @@ block draw_nav {
                                 $nav->url_part)) {
                     class 'selected'
                         if ($selected && $nav->id == $selected->id);
-                    $nav->name_de;
+                    $nav->name;
                 };
             };
         }
@@ -110,7 +116,7 @@ template {
    doctype 'xhtml';
    html {
        head {
-           title {stash->{title} || 'Wittmann Ohne Titel'};
+           title { stash->{title} || 'Seite Ohne Titel' };
            load Js  => 'site.js';
            load Css => 'site.css';
        };
@@ -123,6 +129,8 @@ template {
                };
                
                draw_nav topnav(navigation => ..., selected => ...);
+
+               div.searchform { stash->{searchform}; };
            };
            
            div content {

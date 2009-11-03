@@ -74,11 +74,22 @@ sub add_text {
     my $text = shift;
     my $raw = shift || 0;
 
-    return if (!defined($text) || ref($text) || $text eq '');
+    return if (!defined($text) || (!ref($text) && $text eq ''));
     
-    my $class = 'Catalyst::View::ByCode::Markup::' . ($raw ? 'Element' : 'EscapedText');
-    $self->append($class->new(content => $text));
-
+    if (blessed($text)) {
+        if ($text->can('render')) {
+            # looks like a H::FormFu / H::FormHandler object...
+            # always print unescaped (trust the authors)
+            $self->add_text($text->render(), 1);
+        } else {
+            ### TODO: can we do more things that act natural?
+        }
+    } elsif (ref($text)) {
+        # TODO -- do something meaningful
+    } else {
+        my $class = 'Catalyst::View::ByCode::Markup::' . ($raw ? 'Element' : 'EscapedText');
+        $self->append($class->new(content => $text));
+    }
     return;
 }
 
