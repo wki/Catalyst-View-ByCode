@@ -58,43 +58,62 @@ our $INDENT_STEP = 2;
 
 sub BUILD {
     my $self = shift;
-    _stringify_attr_values($self->attr);
+    #_stringify_attr_values($self->attr);
 }
 
-#
-# attr setting
-#
-around set_attr => sub {
-    my $orig = shift;
-    my $self = shift;
-    my %attr = @_;
-    
-    # warn "in 'around set_attr'...";
+# #
+# # attr setting
+# #
+# around set_attr => sub {
+#     my $orig = shift;
+#     my $self = shift;
+#     my %attr = @_;
+#     
+#     # warn "in 'around set_attr'...";
+# 
+#     _stringify_attr_values(\%attr);
+#     
+#     $orig->($self, %attr);
+# };
 
-    _stringify_attr_values(\%attr);
-    
-    $orig->($self, %attr);
-};
+# #
+# # helper: stringify attr values
+# #
+# sub _stringify_attr_values {
+#     my $attr = shift; # \%attr
+#     
+#     # warn "stringifying attr values";
+#     foreach my $key (keys(%{$attr})) {
+#         my $value = $attr->{$key};
+#         if (!ref($value)) {
+#             # do nothing
+#         } elsif (ref($value) eq 'ARRAY') {
+#             $attr->{$key} = join(' ', @{$value});
+#         } elsif (ref($value) eq 'HASH') {
+#             $attr->{$key} = join(';', map {"$_:$value->{$_}"} keys(%{$value}));
+#         } else {
+#             $attr->{$key} = "$value";
+#         }
+#     }
+# }
 
 #
-# helper: stringify attr values
+# helper: stringify a single attr value
 #
-sub _stringify_attr_values {
-    my $attr = shift; # \%attr
+sub _stringify_attr_value {
+    my $value = shift;
     
-    # warn "stringifying attr values";
-    foreach my $key (keys(%{$attr})) {
-        my $value = $attr->{$key};
-        if (!ref($value)) {
-            # do nothing
-        } elsif (ref($value) eq 'ARRAY') {
-            $attr->{$key} = join(' ', @{$value});
-        } elsif (ref($value) eq 'HASH') {
-            $attr->{$key} = join(';', map {"$_:$value->{$_}"} keys(%{$value}));
-        } else {
-            $attr->{$key} = "$value";
-        }
+    if (!ref($value)) {
+        # do nothing
+    } elsif (ref($value) eq 'ARRAY') {
+        return join(' ', @{$value});
+    } elsif (ref($value) eq 'HASH') {
+        return join(';', map {"$_:$value->{$_}"} keys(%{$value}));
+    } else {
+        return "$value";
     }
+    
+    return $value
 }
 
 #
@@ -116,7 +135,8 @@ override as_string => sub {
         $result .= "\n" . (' ' x ($INDENT_STEP * $indent_level));
     }
     $result .= qq{<${\$self->tag}};
-    $result .= qq{ $_="${\$self->_html_escape($self->attr->{$_})}"}
+    # OLD: $result .= qq{ $_="${\$self->_html_escape($self->attr->{$_})}"}
+    $result .= qq{ $_="${\$self->_html_escape(_stringify_attr_value($self->attr->{$_}))}"}
         for sort keys(%{$self->attr});
     
     # distinguish between empty tags and content-containing ones...
