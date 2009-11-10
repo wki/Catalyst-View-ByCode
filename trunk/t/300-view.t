@@ -1,4 +1,4 @@
-use Test::More tests => 22;
+use Test::More tests => 30;
 use Test::Exception;
 use Catalyst ();
 use FindBin;
@@ -55,4 +55,29 @@ ok('Catalyst::Template::simple_template'->can('RUN'), 'compiled package can run'
 is($subref, 'Catalyst::Template::simple_template'->can('RUN'), 'RUN returned by compilation');
 
 # see if template generates markup
-### TODO
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing simple markup lives';
+lives_ok {$subref->()} 'calling simple_template lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{\s*
+        <div\s+id="main">\s*Perl\s+rocks\s*</div>\s*
+        \s*}xms, 
+     'simple markup looks OK');
+
+#
+# test block inside a template
+#
+$subref = 1234;
+lives_ok {$subref = $view->_compile_template($c, 'block_template.pl')} 'compilation block lives';
+is(ref($subref), 'CODE', 'compile block result is a CODEref');
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing block markup lives';
+lives_ok {$subref->()} 'calling block_template lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{\s*
+        <b>\s*before\s+block\s*</b>
+        \s*
+        <div\s+id="sillyblock">\s*just\s+my\s+2\s+centOK:\s+1\s*</div>\s*
+        \s*
+        <b>\s*after\s+block\s*</b>
+        \s*}xms, 
+     'block markup looks OK');
