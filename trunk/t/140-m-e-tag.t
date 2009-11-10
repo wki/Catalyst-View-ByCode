@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 23;
+use Test::More tests => 27;
 use Test::Exception;
 
 #
@@ -54,6 +54,16 @@ is($e->as_string, '<xxx abc="4&#60;2" x12="blabla"></xxx>', 'tag w/ attr w/o con
 
 $e->delete_attr('x12');
 is($e->as_string, '<xxx abc="4&#60;2"></xxx>', 'tag w/ attr w/o content is OK');
+
+$e->set_attr(wot => [1, 'a', 42]);
+is_deeply($e->attr->{wot}, [1, 'a', 42], 'array-ref attr is possible');
+is($e->as_string, '<xxx abc="4&#60;2" wot="1 a 42"></xxx>', 'tag w/ array-attr gets stringified OK');
+$e->delete_attr('wot');
+
+$e->set_attr(zap => {uu => 'ijklm'});
+is_deeply($e->attr->{zap}, {uu => 'ijklm'}, 'hash-ref attr is possible');
+is($e->as_string, '<xxx abc="4&#60;2" zap="uu:ijklm"></xxx>', 'tag w/ hash-attr gets stringified OK');
+$e->delete_attr('zap');
 
 #
 # add some content

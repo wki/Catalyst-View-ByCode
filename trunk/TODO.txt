@@ -9,7 +9,6 @@ Changes C::V::ByCode
   tag_name { ... } attr => value, ...,;   # trailing comma (!)
 
   attr-values are stringified at rendering time
-  TODO: add tests for that!
   
 
 0) Template file  +++ DONE!
