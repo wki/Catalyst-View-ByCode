@@ -2,60 +2,6 @@ Changes C::V::ByCode
 
 ++ Tag.pm -- attr isa HashRef (!) -- no constraint here!
 
-00) internal way of calling blocks / tags:
-  sub block_name(&;@) { ... }
-  sub tag_name(&;@) { ... }
-  block_name { ... } attr => value, ...,; # trailing comma (!)
-  tag_name { ... } attr => value, ...,;   # trailing comma (!)
-
-  attr-values are stringified at rendering time
-  
-
-0) Template file  +++ DONE!
-    - sub template(&);
-    - template { ... code ... };
-      # equivalent to:
-      sub RUN { ... }
-
-
-1) new way defining tags -- DO WE NEED THIS?
-    - sub &C::V::B::Renderer::tag();
-    - tag 'sub_name', 'real_tag_name';
-      add 'sub_name' to @EXPORT, $EXPORT_TAGS{default}
-    - creates:
-      sub sub_name(;&@) {
-          my $code = $_[0];
-          my $attr = ref($_[1]) eq 'HASH' ? $_[1] : {};
-          
-          # open tag 'real_tag_name' / $attr
-          $markup->add_content($code->($attr)) if ($code);
-          # close tag
-      }
-    
-    - Devel::Declare way of calling:
-      div id.class(attr_name => attr_value, ...) { ... content ...};
-
-
-2) defining blocks  +++ DONE
-    --> CAVEAT: attr() definitions inside block {} will not work as expected
-
-    - native way of defining a block:
-      block block_name => sub { ... ; block_content(...); ... };
-      
-    - Devel::Declare'd way of defining a block:
-      block block_name { ... };
-      
-    - native way of calling a block:
-      block_name { ... block_content ... } { ... };
-      
-    - Devel::Declare'd way of calling a block:
-      block_name id.class(attr_name => attr_value, ...) { ... block_content ...};
-
-
-3) extensions to known sub's  +++ DONE
-    - getters: attr('xxx')       id()        class()
-    - setters: attr('xxx', 42)   id('bla')   class('foo')
-
 
 4) changed `yield()` magic:
    stash->{yield} = { yield_name => '/path/to/template' | ['/p/t/t', ...], ... }
@@ -64,7 +10,7 @@ Changes C::V::ByCode
    - if ref(yield_name) eq 'ARRAY' --> continue until array is empty
      --> yield-names act as hooks for generating stuff sometimes...
 
-   
+
 5) enhance form handling  +++ 'render' handling DONE
    - everything so far was nonsense. WE SIMPLY DO NOTHING.
    - magic handling via: div { stash->{form} };
@@ -99,7 +45,7 @@ block draw_nav {
             };
         }
     };
-}
+};
 
 block infobox {
     my $id = attr('id');
@@ -112,7 +58,7 @@ block infobox {
             block_content;
         };
     };
-}
+};
 
 template {
    doctype 'xhtml';
@@ -150,7 +96,7 @@ template {
            yield body_end;
        };
    };
-}
+};
 
 
 

@@ -4,10 +4,10 @@ use warnings;
 use base qw(Exporter);
 
 use Devel::Declare();
-#use Catalyst::View::ByCode::Util;
 use Catalyst::View::ByCode::Declare;
 use Catalyst::View::ByCode::Markup::Document;
 use HTML::Tagset;
+# use HTML::Entities; ### TODO: think about -- but pollutes our namespaces
 
 our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
 
@@ -300,10 +300,7 @@ sub yield(;*@) {
 # set attribute(s) of latest open tag (instead of 'with' outside)
 #
 sub attr {
-    if (scalar(@_) == 1) {
-        # use it as a getter returning a value
-        return $document->get_attr(@_);
-    }
+    return $document->get_attr(@_) if (scalar(@_) == 1);
     $document->set_attr(@_);
     return;
 }
@@ -384,21 +381,9 @@ sub doctype {
 #
 # get a localized version of something
 #
-sub _ {
-    return $c->localize(@_);
-}
+sub _ { return $c->localize(@_); }
 
-# eliminated: sub _handle_component {}
-sub _handle_tag {
-    my $tag_name = shift;
-    my $code = shift;
-    
-    $document->open_tag($tag_name, @_);
-    $document->add_text($code->(@_)) if ($code);
-    $document->close_tag($tag_name);
-}
-
-sub nbsp { "\x{00a0}" } # bac hack in the moment...
+sub nbsp { "\x{00a0}" } # bad hack in the moment...
 
 #
 # define a function for every tag into a given namespace
@@ -419,7 +404,11 @@ sub _construct_functions {
         # install a tag-named sub in caller's namespace
         no strict 'refs';
         *{"$namespace\::$sub_name"} = sub (;&@) {
-            _handle_tag($tag_name, @_);
+            my $code = shift;
+            
+            $document->open_tag($tag_name, @_);
+            $document->add_text($code->(@_)) if ($code);
+            $document->close_tag($tag_name);
         };
         use strict 'refs';
         

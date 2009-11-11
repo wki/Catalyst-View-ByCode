@@ -89,8 +89,8 @@ Catalyst::View::ByCode - Templating using pure Perl code
                 };
             };
         };
-    }
-    # 273 characters without white space
+    };
+    # 274 characters without white space
     
     
     # 4) expect to get this HTML generated:
@@ -240,8 +240,10 @@ As usual for Perl, there is always more than one way to do it:
 =item old-school perl
 
     # appending attributes after tag
-    div { ... content ... } id => 'the_id', class => 'some_class';
-    
+    div { ... content ... } id => 'top', 
+                            class => 'noprint silver',
+                            style => 'display: none';
+
 =item special content
 
     # using special methods
