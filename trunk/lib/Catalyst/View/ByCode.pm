@@ -19,8 +19,6 @@ has include   => (is => 'rw', default => sub { [] });
 # Stash Variables:
 #    template => 'path/to/template'
 #    yield => { name => 'path/to/yield' }
-#       ### FIXME: remove yield_list, replace with yield->{content}
-#    yield_list => [ wrapper, template ]
 #    wrapper => 'path/to/wrapper'
 #
 #    set by Catalyst (we need them!):
@@ -459,7 +457,7 @@ sub process {
     # run render-sequence
     #
     $c->stash->{yield} ||= {};
-    $c->stash->{yield_list} = \@yield_list;
+    $c->stash->{yield}->{content} = \@yield_list;
     init_markup($self, $c);
     
     Catalyst::View::ByCode::Renderer::yield;

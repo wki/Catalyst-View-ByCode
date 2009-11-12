@@ -1,31 +1,48 @@
 Changes C::V::ByCode
+--------------------
 
-++ Tag.pm -- attr isa HashRef (!) -- no constraint here!
+1) IDEA: how to build extensible things
+
+   directory schema:
+     lib/My/Stuff/
+       Thing.pm
+       Controller/
+         -- problem: must become MyApp::Controller::Xxx
+       View/
+         -- problem: must become MyApp::View::Xxx
+       root/
+         -- problem: add on top of /root dir in MyApp main folder
+           static/
+               js/
+                   thing.js
+               css/
+                   thing.css
+               images/
+                   ...
+           forms/
+
+   usage inside app:
+     (1)
+       use Catalyst qw( ... SearchPath ...);
+       __PACKAGE__->add_search_package( ... );
+     (2)
+       use Catalyst qw (... APackageWithSearchPath ... )
+     
+     __PACKAGE__->config(...);
+     __PACKAGE__->setup();
+
+   things to define:
+     - does first match win? or last? which is better?
 
 
-4) changed `yield()` magic:
-   stash->{yield} = { yield_name => '/path/to/template' | ['/p/t/t', ...], ... }
-   
-   - yield() --> yields 'content'
-   - if ref(yield_name) eq 'ARRAY' --> continue until array is empty
-     --> yield-names act as hooks for generating stuff sometimes...
-
-
-5) enhance form handling  +++ 'render' handling DONE
-   - everything so far was nonsense. WE SIMPLY DO NOTHING.
-   - magic handling via: div { stash->{form} };
-     Trick: print OUT/RAW handles obj-refs specially
-       $obj->can('render') --> do it
-       $obj->can('to_string') ??? other names ???
-
-
-6) example:
+example:
 
 block draw_nav {
     my $navigation = attr('navigation');
-    my $selected = attr('selected');
-    my $id = attr('id');
-    my $class = attr('class');
+    my $selected   = attr('selected');
+    my $id         = attr('id');
+    my $class      = attr('class');
+    
     return if (!$navigation);
     
     ul {
@@ -48,15 +65,13 @@ block draw_nav {
 };
 
 block infobox {
-    my $id = attr('id');
+    my $id       = attr('id');
     my $headline = attr('headline') || 'untitled';
     
     div.infobox {
         id $id if ($id);
-        div.infobox_head { $headline };
-        div.infobox_content {
-            block_content;
-        };
+        div.infobox_head    { $headline };
+        div.infobox_content { block_content };
     };
 };
 

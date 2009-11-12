@@ -156,7 +156,7 @@ sub template(&) {
 #
 # a block definition
 #
-sub block($&) {
+sub block($&;@) {
     my $name = shift;
     my $code = shift;
     
@@ -260,44 +260,36 @@ sub load {
 # ### TODO: yield +package::package::package::subname
 #
 sub yield(;*@) {
-    my $yield_name = shift || '';
+    my $yield_name = shift || 'content';
     
     $c->log->debug("yield '$yield_name' executing...") if ($c->debug);
 
-    my $sub;
-    if (ref($yield_name) eq 'CODE') {
-        $sub = $yield_name;
-    } elsif ($yield_name && exists($c->stash->{yield}->{$yield_name})) {
-        #
-        # a named yield we know about is requested
-        #
-        $sub = $c->stash->{yield}->{$yield_name};
-        if (!ref($sub)) {
-            $sub = $view->_compile_template($c, $sub);
-        }
-        $c->stash->{yield}->{$yield_name} = undef;
-    } elsif (!$yield_name || lc($yield_name) eq 'content') {
-        #
-        # standard content - follow the yield-list
-        #
-        $sub = shift @{$c->stash->{yield_list}};
-    } else {
-        #
-        # an unknown thing -- see if we know the path
-        #   or the calling package knows a sub.
-        #
-        $sub = $view->_compile_template($c, $yield_name)
-               || caller->can($yield_name);
-    }
-
-    ### FIXME: if $sub === ARRAY ---> repeat until array is empty
-    $sub->(@_) if ($sub && ref($sub) eq 'CODE');
+    _yield(exists($c->stash->{yield}->{$yield_name})
+            ? $c->stash->{yield}->{$yield_name}
+            : $yield_name);
 
     return;
 }
 
+# helper for recursive resolution
+sub _yield {
+    my $thing = shift;
+    
+    if (!$thing) {
+        return;
+    } elsif (ref($thing) eq 'ARRAY') {
+        while (my $x = shift(@{$thing})) {
+            _yield($x);
+        }
+    } elsif (ref($thing) eq 'CODE') {
+        $thing->();
+    } elsif (!ref($thing)) {
+        _yield($view->_compile_template($c, $thing));
+    }
+}
+
 #
-# set attribute(s) of latest open tag (instead of 'with' outside)
+# get/set attribute(s) of latest open tag
 #
 sub attr {
     return $document->get_attr(@_) if (scalar(@_) == 1);
