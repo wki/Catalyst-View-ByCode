@@ -26,7 +26,7 @@ Changes C::V::ByCode
        use Catalyst qw( ... SearchPath ...);
        __PACKAGE__->add_search_package( ... );
      (2)
-       use Catalyst qw (... APackageWithSearchPath ... )
+       use Catalyst qw (... APackageWithSearchPath ... );
      
      __PACKAGE__->config(...);
      __PACKAGE__->setup();
