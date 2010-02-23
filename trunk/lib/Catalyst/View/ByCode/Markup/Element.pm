@@ -15,6 +15,8 @@ sub as_string { $_[0]->content }
 sub _html_escape {
     my ($self, $text) = @_;
 
+    return '' if (!defined($text));
+    
     $text =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}exmsg;
     return $text;
 }

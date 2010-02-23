@@ -1,5 +1,13 @@
 Revision history for Catalyst-View-ByCode
 
+0.05    2010-02-23
+        * fixed a bug that made certain multiline prototype-like attributes fail
+        * added a test to verify that
+        * allow to use special attribute-names like
+          div(dataTarget => 'x')       becomes <div data-target="x">
+          div(data_target => 'x')      becomes <div data-target="x">
+          div(style => {zIndex => 9})  becomes <div style="z-index: 9">
+
 0.04    2009-08-12
         * started rewriting the markup engine using Moose
         * defining main sub with template {...}; now

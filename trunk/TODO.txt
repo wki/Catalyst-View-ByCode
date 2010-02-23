@@ -1,6 +1,31 @@
 Changes C::V::ByCode
 --------------------
 
+0) BUGS/CHANGES:
+   ### fixed
+   - a(href => c->uri_for_action('concept/detail', $concept->ola_concept_id), title => 'Details', class => 'ajax', 'data-target' => '-new', 'data-title' => 'Detail') {
+     works
+   
+   ### fixed
+   - a(href => c->uri_for_action('concept/detail', $concept->ola_concept_id), 
+       title => 'Details', 
+       class => 'ajax', 
+       'data-target' => '-new', 
+       'data-title' => 'Detail')
+     omits everything after href...
+   
+   ### done 2010-02-23
+   - how would
+       a(data_target => '-new' , ...)
+       a(dataTarget => '-new' , ...)
+       a(style => {zIndex => 999})
+     look like???
+   
+   - div { class => '+some_class' }; # add a class name
+     div { class => '-some_class' }; # remove a class name
+     div { class => ' -some_class' }; # replace class name (BAD BUT FUNCTIONAL)
+
+
 1) IDEA: how to build extensible things
 
    directory schema:

@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 25;
+use Test::More tests => 41;
 use Test::Exception;
 
 #
@@ -63,4 +63,90 @@ is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 3 is empty');
 
 lives_ok { div { id 'xyz'; b { some_block(); }; }; } 'adding a div with block lives';
 like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+id="xyz">\s*<b>\s*was\s+inside\s+block\s*</b>\s*</div>\s*}xms, 'markup3 looks OK');
+
+#
+# testing 'class' operator inside a tag
+#
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 4 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 4 is empty');
+
+lives_ok { span { class 'xxx' }; } 'adding a span-tag with class lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="xxx">\s*</span>\s*}xms, 'markup4 looks OK');
+
+
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 5 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 5 is empty');
+
+lives_ok { span { class 'xxx'; class 'yyy' }; } 'adding a span-tag with 2 classes lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="yyy">\s*</span>\s*}xms, 'markup5 looks OK');
+
+
+# ### TODO: think about:  class '+xxx' to expand
+# lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 5 lives';
+# is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 5 is empty');
+# 
+# lives_ok { span { class 'xxx'; class '+yyy' }; } 'adding a span-tag with 2 classes lives';
+# like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="yyy">\s*</span>\s*}xms, 'markup5 looks OK');
+
+#
+# attrs with linebreaks
+#
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 4 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 4 is empty');
+
+lives_ok { div(id => 'xyz',
+               bla => 'blubb') { 'test' }; } 'adding a div with line-break lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+bla="blubb"\s+id="xyz">\s*test\s*</div>\s*}xms, 'markup4 looks OK');
+
+#
+# attrs with linebreaks (2)
+#
+{
+    package X;
+    sub new {
+        my $class = shift;
+        return bless {}, $class;
+    }
+    
+    sub uri_for_action {
+        return 'bla'; # just a dummy return value
+    }
+    
+    package Y;
+    sub new {
+        my $class = shift;
+        return bless {}, $class;
+    }
+    
+    sub db_id {
+        return 'blubb'; # just a dummy return value
+    }
+}
+
+sub c {
+    return X->new;
+}
+
+my $concept = Y->new;
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 5 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 5 is empty');
+
+# this version failed before (2010-02-23):
+lives_ok { a(href => c->uri_for_action('concept/detail', $concept->db_id), 
+             title => 'Details', 
+             class => 'ajax', 
+             'data-target' => '-new', 
+             'data-title' => 'Detail'
+             ) { 'xxx' } }
+         'adding a a-tag with line-break lives';
+
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<a
+                                                            \s+class="ajax"
+                                                            \s+data-target="-new"
+                                                            \s+data-title="Detail"
+                                                            \s+href="bla"
+                                                            \s+title="Details">
+                                                            \s*xxx\s*</a>\s*}xms, 'markup5 looks OK');
 

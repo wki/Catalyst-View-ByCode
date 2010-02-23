@@ -139,9 +139,14 @@ sub parse_tag_declaration {
     #
     my $proto = strip_proto;
     if ($proto) {
+        ###
         ### BAD HACK: multiline (...) things will otherwise fail
-        $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
-        # $extras .= ($extras ? ' ' : '') . "attr $proto;";
+        ###
+        $proto =~ s{\s*[\r\n]\s*}{}xmsg;
+        
+        # this old version was too strict and failed:
+        # $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
+        
         $extras .= " $proto,";
     }
     

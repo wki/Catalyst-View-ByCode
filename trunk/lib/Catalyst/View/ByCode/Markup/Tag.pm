@@ -108,12 +108,26 @@ sub _stringify_attr_value {
     } elsif (ref($value) eq 'ARRAY') {
         return join(' ', @{$value});
     } elsif (ref($value) eq 'HASH') {
-        return join(';', map {"$_:$value->{$_}"} keys(%{$value}));
+        return join(';', map {"${\_key($_)}:$value->{$_}"} keys(%{$value}));
     } else {
         return "$value";
     }
     
     return $value
+}
+
+#
+# helper: create a unified key for a string
+#         camelCase -> camel-case
+#         lower_case -> lower-case
+#
+sub _key {
+    my $key = shift;
+    
+    $key =~ s{([A-Z])}{-\l$1}xmsg;
+    $key =~ s{_}{-}xmsg;
+    
+    return $key;
 }
 
 #
@@ -136,7 +150,7 @@ override as_string => sub {
     }
     $result .= qq{<${\$self->tag}};
     # OLD: $result .= qq{ $_="${\$self->_html_escape($self->attr->{$_})}"}
-    $result .= qq{ $_="${\$self->_html_escape(_stringify_attr_value($self->attr->{$_}))}"}
+    $result .= qq{ ${\_key($_)}="${\$self->_html_escape(_stringify_attr_value($self->attr->{$_}))}"}
         for sort keys(%{$self->attr});
     
     # distinguish between empty tags and content-containing ones...

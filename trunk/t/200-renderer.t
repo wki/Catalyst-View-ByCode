@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 17;
+use Test::More tests => 29;
 use Test::Exception;
 
 #
@@ -40,3 +40,28 @@ isa_ok(markup_object(), 'Catalyst::View::ByCode::Markup::Document', 'markup obje
 
 lives_ok {markup_object->add_tag('div', id => 42)} 'adding a tag works';
 like(get_markup(), qr{\s*<div\s+id="42">\s*</div>\s*}xms, 'markup looks good');
+
+#
+# testing "camelCase" or "lower_cased" attributes to generate "combined-names"
+#
+lives_ok {init_markup()} 'initing markup 3 lives';
+isa_ok(markup_object(), 'Catalyst::View::ByCode::Markup::Document', 'markup object 3 is Document');
+
+lives_ok {markup_object->add_tag('div', dataBlock => 42)} 'adding a tag with camelCase attr works';
+like(get_markup(), qr{\s*<div\s+data-block="42">\s*</div>\s*}xms, 'markup looks good');
+
+
+
+lives_ok {init_markup()} 'initing markup 4 lives';
+isa_ok(markup_object(), 'Catalyst::View::ByCode::Markup::Document', 'markup object 4 is Document');
+
+lives_ok {markup_object->add_tag('div', data_test => 'xyz')} 'adding a tag with lower_cased attr works';
+like(get_markup(), qr{\s*<div\s+data-test="xyz">\s*</div>\s*}xms, 'markup looks good');
+
+
+
+lives_ok {init_markup()} 'initing markup 5 lives';
+isa_ok(markup_object(), 'Catalyst::View::ByCode::Markup::Document', 'markup object 5 is Document');
+
+lives_ok {markup_object->add_tag('div', style => {zIndex => 999})} 'adding a tag with lower_cased attr-hash works';
+like(get_markup(), qr{\s*<div\s+style="z-index:\s*999">\s*</div>\s*}xms, 'markup looks good');
