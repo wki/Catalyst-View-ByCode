@@ -1,7 +1,8 @@
-use Test::More tests => 30;
+use Test::More tests => 37;
 use Test::Exception;
 use Catalyst ();
 use FindBin;
+use lib "$FindBin::Bin/lib";
 use Path::Class::File;
 
 # setup our Catalyst :-)
@@ -81,3 +82,19 @@ like(Catalyst::View::ByCode::Renderer::get_markup(),
         <b>\s*after\s+block\s*</b>
         \s*}xms, 
      'block markup looks OK');
+
+#
+# test including a package that defines a block
+#
+$subref = 999;
+use_ok 'IncludeMe';
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing block markup lives';
+lives_ok { $view->include(['IncludeMe']) } 'setting include lives';
+lives_ok {$subref = $view->_compile_template($c, 'including_template.pl')} 'compilation including template lives';
+
+### tests fail starting here. reason: import does not work as expected...
+is(ref($subref), 'CODE', 'compile including result is a CODEref');
+lives_ok {$subref->()} 'calling block_template lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{\s*xxx}xms, 'including markup looks good');
+

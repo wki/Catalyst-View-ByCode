@@ -622,7 +622,7 @@ sub __compile {
     #
     # build some magic code around the template's code
     #
-    my $include = join("\n", map {"use $_;"} @{$self->include});
+    ### my $include = join("\n", map {"use $_;"} @{$self->include});
     my $now = localtime(time);
     my $mtime = (stat($path))[9];
     my $code = <<PERL;
@@ -635,9 +635,12 @@ use strict;
 use warnings;
 use utf8;
 
-use Devel::Declare();
+# use Devel::Declare(); ### do we need D::D ?
 use Catalyst::View::ByCode::Renderer qw(:default);
-$include
+${ \join("\n", map { "use $_;" } @{$self->include}) }
+
+BEGIN { Catalyst::View::ByCode::Renderer::_export_blocks( qw( ${ \join(' ', @{$self->include}) } ) ) }
+
 # subs that are overloaded here would warn otherwise
 no warnings 'redefine';
 PERL

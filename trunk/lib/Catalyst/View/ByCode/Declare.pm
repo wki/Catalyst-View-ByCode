@@ -242,6 +242,7 @@ sub post_block_inject { # called from a BEGIN {} block at scope start
 sub install_sub {
     my $sub_name = shift;
     my $code = shift;
+    my $add_to_array = shift;
 
     my $package = Devel::Declare::get_curstash_name;
 
@@ -249,6 +250,7 @@ sub install_sub {
     no warnings 'redefine';
     *{"$package\::$sub_name"} = $code;
     push @{"$package\::EXPORT"}, $sub_name;
+    push @{"$package\::$add_to_array"}, $sub_name if ($add_to_array);
     ### right?? push @{"$package\::$EXPORT_TAGS\{default\}"}, $sub_name;
 }
 
@@ -311,7 +313,7 @@ sub block_parser {
         # insert a preliminary sub named $sub_name 
         # into the caller's namespace to make compiler happy
         # and to allow calling the sub without ()'s
-        install_sub($sub_name => sub(;&@) {});
+        install_sub($sub_name => sub(;&@) {}, 'EXPORT_BLOCK');
         add_tag_parser($sub_name);
     };
 }

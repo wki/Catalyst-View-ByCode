@@ -62,15 +62,17 @@ sub import {
     my $default_export = grep {$_ eq ':default'} @_;
 
     #
+    # do Exporter's Job on Catalyst::View::ByCode::Renderer's @EXPORT
+    #
+    $module->export_to_level(1, $module, grep {!ref $_} @_);
+
+    ### TODO: find an array-ref in @_ and _export_blocks() for every package there
+    
+    #
     # build HTML Tag-subs into caller's namespace
     #
     _construct_functions($calling_package)
         if ($default_export);
-
-    #
-    # do Exporter's Job on Catalyst::View::ByCode::Renderer's @EXPORT
-    #
-    $module->export_to_level(1, $module, @_);
 
     #
     # create *OUT and *RAW in calling package to allow 'print' to work
@@ -164,6 +166,10 @@ sub block($&;@) {
 
     no strict 'refs';
     no warnings 'redefine';
+    
+    #
+    # generate a sub in our namespace
+    #
     *{"$package\::$name"} = sub(;&@) {
         local $block_content = shift;
         
@@ -172,6 +178,12 @@ sub block($&;@) {
         $document->add_text($code->()) if ($code);
         $document->close_tag();
     };
+    
+    #
+    # mark this sub as a special exportable
+    #
+    ${"$package\::EXPORT_BLOCK"}{$name} = 1;
+    
     use strict 'refs';
 }
 
@@ -409,6 +421,14 @@ sub _construct_functions {
             const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
+
+    # this cannot work.
+    # # add a tag parser for every @EXPORT_BLOCK defined block
+    # no strict 'refs';
+    # # $declare{$_} = { const => Catalyst::View::ByCode::Declare::tag_parser }
+    # warn "EXPORT_BLOCK: $_"
+    #     for (keys(%{"$namespace\::EXPORT_BLOCK"}));
+    # use strict 'refs';
     
     # add logic for block definitions
     $declare{block} = {
@@ -426,4 +446,15 @@ sub _construct_functions {
     
 }
 
+#
+# add all blocks from imported namespaces to Devel::Declare
+#
+sub _export_blocks {
+    my $calling_package = caller;
+    
+    warn "_export_blocks $calling_package";
+    foreach my $import_package (@_) {
+        warn "_export_blocks :: $import_package -> $calling_package";
+    }
+}
 1;
