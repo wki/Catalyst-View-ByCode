@@ -8,6 +8,11 @@ Revision history for Catalyst-View-ByCode
           div(data_target => 'x')      becomes <div data-target="x">
           div(style => {zIndex => 9})  becomes <div style="z-index: 9">
 
+        2010-03-01
+        * found a way to correctly export and Devel::Declare'able
+          all defined block()s into importing namespaces
+
+
 0.04    2009-08-12
         * started rewriting the markup engine using Moose
         * defining main sub with template {...}; now

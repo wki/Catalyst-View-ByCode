@@ -2,10 +2,11 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
-   - find a way to add a Devel::Declare Handler if a 'template xxx' defined
+   - find a way to add a Devel::Declare Handler if a 'block xxx' defined
      sub is imported into another template.
      
-     ==> @exporting_package::EXPORT_BLOCK -- enthält definierte Blocks
+     ==> @exporting_package::EXPORT_BLOCK -- contains a list of all blocks defined
+     ==> &C::V::B::Renderer::_export_blocks() does the job.
      
    ### fixed
    - a(href => c->uri_for_action('concept/detail', $concept->ola_concept_id), title => 'Details', class => 'ajax', 'data-target' => '-new', 'data-title' => 'Detail') {
