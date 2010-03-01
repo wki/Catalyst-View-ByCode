@@ -33,7 +33,7 @@ use UUID::Random;
 use Path::Class::File;
 use File::Spec;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 our $compiling_package; # local() ized during a compile
 
@@ -303,6 +303,10 @@ the special sub C<block_content>. A simple example makes this clearer:
       <div class="info">just my 2 cents</div>
     </div>
 
+every block defined in a package is auto-added to the packages C<@EXPORT>
+array and mangled in a special way to make the magic calling syntax work after
+importing it into another package.
+
 =head1 CONFIGURATION
 
 A simple configuration of a derived Controller could look like this:
@@ -316,6 +320,9 @@ A simple configuration of a derived Controller could look like this:
         
         # This is your wrapper template located in root_dir (default: wrapper.pl)
         wrapper => 'wrapper.pl',
+        
+        # all these modules are use()'d automatically
+        include => [Some::Module Another::Package],
     );
 
 =head1 METHODS
@@ -553,7 +560,6 @@ sub _compile_template {
         $template_package =~ s{/}{::}xmsg;
         $template_package =~ s{\.\w+\z}{}xms;
     }
-    # $template_path = $self->root_dir . "/$template_path";
 
     #
     # see if we already know the package
@@ -571,10 +577,8 @@ sub _compile_template {
     if (!$full_path || !$file_mtime) {
         # we don't know the template or it has vanished somehow
         my $full_path = $c->path_to($self->root_dir, $template_path);
-        # my $full_path = $self->root_dir . '/' . $template_path;
         if (-f $full_path) {
             # found!
-            # $c->log->debug(qq/found template "$template_path"/) if $c->debug;
             $self->__compile($c, "$full_path" => $package);
         }
     } elsif ($file_mtime != $package_mtime) {
@@ -636,11 +640,8 @@ use warnings;
 use utf8;
 
 # use Devel::Declare(); ### do we need D::D ?
-use Catalyst::View::ByCode::Renderer qw(:default);
 ${ \join("\n", map { "use $_;" } @{$self->include}) }
-
-# ensure that all 'block .* () {}' directives are handled right
-BEGIN { Catalyst::View::ByCode::Renderer::_export_blocks( qw( ${ \join(' ', @{$self->include}) } ) ) }
+use Catalyst::View::ByCode::Renderer qw(:default);
 
 # subs that are overloaded here would warn otherwise
 no warnings 'redefine';

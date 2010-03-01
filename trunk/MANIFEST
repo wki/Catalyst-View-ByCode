@@ -22,9 +22,11 @@ t/200-renderer.t
 t/210-renderer-markup.t
 t/300-view.t
 t/400-app.t
+t/lib/IncludeMe.pm
 t/lib/TestApp.pm
 t/lib/TestApp/View/ByCode.pm
 t/root/bycode/block_template.pl
 t/root/bycode/erroneous_template.pl
+t/root/bycode/including_template.pl
 t/root/bycode/simple_template.pl
 TODO.txt

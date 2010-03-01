@@ -83,11 +83,15 @@ like(Catalyst::View::ByCode::Renderer::get_markup(),
         \s*}xms, 
      'block markup looks OK');
 
+#done_testing; exit;
+
 #
 # test including a package that defines a block
 #
 $subref = 999;
+
 use_ok 'IncludeMe';
+
 lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing block markup lives';
 lives_ok { $view->include(['IncludeMe']) } 'setting include lives';
 lives_ok {$subref = $view->_compile_template($c, 'including_template.pl')} 'compilation including template lives';

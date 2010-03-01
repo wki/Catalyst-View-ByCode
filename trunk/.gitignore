@@ -3,3 +3,4 @@ Makefile.PL
 Makefile
 _build/
 blib/
+*.bak

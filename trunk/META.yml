@@ -1,12 +1,36 @@
 ---
-name: Catalyst-View-ByCode
-version: 0.03
+abstract: 'Templating using pure Perl code'
 author:
   - 'Wolfgang Kinkeldei <wki@cpan.org>'
-abstract: Templating using pure Perl code
+configure_requires:
+  Module::Build: 0.36
+dynamic_config: 0
+generated_by: 'Module::Build version 0.3601'
 license: perl
-resources:
-  license: http://dev.perl.org/licenses/
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Catalyst-View-ByCode
+provides:
+  Catalyst::Helper::View::ByCode:
+    file: lib/Catalyst/Helper/View/ByCode.pm
+  Catalyst::View::ByCode:
+    file: lib/Catalyst/View/ByCode.pm
+    version: 0.06
+  Catalyst::View::ByCode::Declare:
+    file: lib/Catalyst/View/ByCode/Declare.pm
+  Catalyst::View::ByCode::Markup::Document:
+    file: lib/Catalyst/View/ByCode/Markup/Document.pm
+  Catalyst::View::ByCode::Markup::Element:
+    file: lib/Catalyst/View/ByCode/Markup/Element.pm
+  Catalyst::View::ByCode::Markup::EscapedText:
+    file: lib/Catalyst/View/ByCode/Markup/EscapedText.pm
+  Catalyst::View::ByCode::Markup::Structured:
+    file: lib/Catalyst/View/ByCode/Markup/Structured.pm
+  Catalyst::View::ByCode::Markup::Tag:
+    file: lib/Catalyst/View/ByCode/Markup/Tag.pm
+  Catalyst::View::ByCode::Renderer:
+    file: lib/Catalyst/View/ByCode/Renderer.pm
 requires:
   Catalyst::Runtime: 5.80
   Devel::Declare: 0.005007
@@ -14,6 +38,8 @@ requires:
   HTML::Tagset: 3.10
   List::Util: 1.21
   MIME::Base64: 3.07
+  Moose: 0
+  MooseX::AttributeHelpers: 0
   Test::Builder: 0.86
   Test::Builder::Tester: 1.18
   Test::Harness: 3.14
@@ -21,26 +47,6 @@ requires:
   UUID::Random: 0.04
   YAML: 0.68
   perl: v5.8.8
-configure_requires:
-  Module::Build: 0.34
-provides:
-  Catalyst::Helper::View::ByCode:
-    file: lib/Catalyst/Helper/View/ByCode.pm
-  Catalyst::View::ByCode:
-    file: lib/Catalyst/View/ByCode.pm
-    version: 0.03
-  Catalyst::View::ByCode::Declare:
-    file: lib/Catalyst/View/ByCode/Declare.pm
-  Catalyst::View::ByCode::Helper:
-    file: lib/Catalyst/View/ByCode/Helper.pm
-  Catalyst::View::ByCode::Markup:
-    file: lib/Catalyst/View/ByCode/Markup.pm
-  Catalyst::View::ByCode::Template:
-    file: lib/Catalyst/View/ByCode/Template.pm
-    version: 0.10
-  Catalyst::View::ByCode::Util:
-    file: lib/Catalyst/View/ByCode/Util.pm
-generated_by: Module::Build version 0.34
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.06

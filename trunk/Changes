@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+0.06    2010-03-01
+        * changed version to 0.06
+        * updated META.yml, MANIFEST
+        * added some docs
+        
 0.05    2010-02-23
         * fixed a bug that made certain multiline prototype-like attributes fail
         * added a test to verify that
@@ -11,7 +16,7 @@ Revision history for Catalyst-View-ByCode
         2010-03-01
         * found a way to correctly export and Devel::Declare'able
           all defined block()s into importing namespaces
-
+          the mechanics behind this is dark magic overwriting import()
 
 0.04    2009-08-12
         * started rewriting the markup engine using Moose

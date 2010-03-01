@@ -66,7 +66,52 @@ sub import {
     #
     $module->export_to_level(1, $module, grep {!ref $_} @_);
 
-    ### TODO: find an array-ref in @_ and _export_blocks() for every package there
+    # 
+    # overwrite (or create) &import in calling_package which
+    #   - auto-imports all block() directives
+    #   - adds a Devel::Declare-setup for every block() directive
+    #
+    if ($default_export && !UNIVERSAL::can($calling_package, '_import')) {
+        no strict 'refs';
+        
+        # save original -- in doubt use Exporter::import
+        local *_old_import = (*{"$calling_package\::import"}{CODE})
+            ? *{"$calling_package\::import"}
+            : *{"Exporter::import"};
+        
+        *{"$calling_package\::_import"} = *_old_import;
+        *{"$calling_package\::import"} = sub {
+            #
+            # our new import() routine...
+            #
+            my $imported_package = $_[0];
+            my $calling_package = caller;
+            
+            if (scalar(@{"$imported_package\::EXPORT_BLOCK"})) {
+                #
+                # process every recorded block() directive
+                #
+                my %declare;
+
+                foreach my $symbol (@{"$imported_package\::EXPORT_BLOCK"}) {
+                    *{"$calling_package\::$symbol"} = *{"$imported_package\::$symbol"};
+
+                    $declare{$symbol} = {
+                        const => Catalyst::View::ByCode::Declare::tag_parser
+                    };
+                }
+
+                if (scalar(keys(%declare))) {
+                    Devel::Declare->setup_for($calling_package, \%declare);
+                }
+            }
+            
+            #
+            # proceed with the original import
+            #
+            goto &{"$imported_package\::_import"};
+        };
+    }
     
     #
     # build HTML Tag-subs into caller's namespace
@@ -422,14 +467,6 @@ sub _construct_functions {
         };
     }
 
-    # this cannot work.
-    # # add a tag parser for every @EXPORT_BLOCK defined block
-    # no strict 'refs';
-    # # $declare{$_} = { const => Catalyst::View::ByCode::Declare::tag_parser }
-    # warn "EXPORT_BLOCK: $_"
-    #     for (keys(%{"$namespace\::EXPORT_BLOCK"}));
-    # use strict 'refs';
-    
     # add logic for block definitions
     $declare{block} = {
         const => Catalyst::View::ByCode::Declare::block_parser
@@ -437,37 +474,6 @@ sub _construct_functions {
     
     # install all tag-parsers collected above
     Devel::Declare->setup_for($namespace, \%declare);
-    
-    # # add entities
-    # foreach my $entity (keys(%entity2char)) {
-    #     no strict 'refs';
-    #     *{"$namespace\::$entity"} = sub { _entity($entity) };
-    # }
-    
-}
-
-#
-# add all blocks from imported namespaces to Devel::Declare
-#
-sub _export_blocks {
-    my $calling_package = caller;
-    
-    my %declare;
-    
-    foreach my $import_package (@_) {
-        no strict 'refs';
-        foreach my $symbol (@{"$import_package\::EXPORT_BLOCK"}) {
-            *{"$calling_package\::$symbol"} = *{"$import_package\::$symbol"};
-            
-            $declare{$symbol} = {
-                const => Catalyst::View::ByCode::Declare::tag_parser
-            };
-        }
-    }
-    
-    if (scalar(keys(%declare))) {
-        Devel::Declare->setup_for($calling_package, \%declare);
-    }
 }
 
 1;

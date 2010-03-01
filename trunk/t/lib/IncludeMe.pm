@@ -6,8 +6,7 @@ use base 'Exporter';
 
 use Catalyst::View::ByCode::Renderer qw(:default);
 
-# our @EXPORT = qw(includable);
-
+# our @EXPORT = qw(includable); -- will be defined implicitly by &block directive
 
 block includable {
     my $xxx = attr('xxx');
