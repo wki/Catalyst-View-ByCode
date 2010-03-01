@@ -639,6 +639,7 @@ use utf8;
 use Catalyst::View::ByCode::Renderer qw(:default);
 ${ \join("\n", map { "use $_;" } @{$self->include}) }
 
+# ensure that all 'block .* () {}' directives are handled right
 BEGIN { Catalyst::View::ByCode::Renderer::_export_blocks( qw( ${ \join(' ', @{$self->include}) } ) ) }
 
 # subs that are overloaded here would warn otherwise

@@ -452,9 +452,22 @@ sub _construct_functions {
 sub _export_blocks {
     my $calling_package = caller;
     
-    warn "_export_blocks $calling_package";
+    my %declare;
+    
     foreach my $import_package (@_) {
-        warn "_export_blocks :: $import_package -> $calling_package";
+        no strict 'refs';
+        foreach my $symbol (@{"$import_package\::EXPORT_BLOCK"}) {
+            *{"$calling_package\::$symbol"} = *{"$import_package\::$symbol"};
+            
+            $declare{$symbol} = {
+                const => Catalyst::View::ByCode::Declare::tag_parser
+            };
+        }
+    }
+    
+    if (scalar(keys(%declare))) {
+        Devel::Declare->setup_for($calling_package, \%declare);
     }
 }
+
 1;

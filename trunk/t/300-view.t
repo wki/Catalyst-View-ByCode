@@ -1,4 +1,4 @@
-use Test::More tests => 37;
+use Test::More;
 use Test::Exception;
 use Catalyst ();
 use FindBin;
@@ -96,5 +96,6 @@ lives_ok {$subref = $view->_compile_template($c, 'including_template.pl')} 'comp
 is(ref($subref), 'CODE', 'compile including result is a CODEref');
 lives_ok {$subref->()} 'calling block_template lives';
 like(Catalyst::View::ByCode::Renderer::get_markup(), 
-     qr{\s*xxx}xms, 'including markup looks good');
+     qr{<div \s+ id="includable_block">\s*i\s+am\s+included.*</div>}xms, 'including markup looks good');
 
+done_testing();
