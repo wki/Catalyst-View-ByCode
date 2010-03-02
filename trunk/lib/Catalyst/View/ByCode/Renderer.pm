@@ -80,37 +80,7 @@ sub import {
             : *{"Exporter::import"};
         
         *{"$calling_package\::_import"} = *_old_import;
-        *{"$calling_package\::import"} = sub {
-            #
-            # our new import() routine...
-            #
-            my $imported_package = $_[0];
-            my $calling_package = caller;
-            
-            if (scalar(@{"$imported_package\::EXPORT_BLOCK"})) {
-                #
-                # process every recorded block() directive
-                #
-                my %declare;
-
-                foreach my $symbol (@{"$imported_package\::EXPORT_BLOCK"}) {
-                    *{"$calling_package\::$symbol"} = *{"$imported_package\::$symbol"};
-
-                    $declare{$symbol} = {
-                        const => Catalyst::View::ByCode::Declare::tag_parser
-                    };
-                }
-
-                if (scalar(keys(%declare))) {
-                    Devel::Declare->setup_for($calling_package, \%declare);
-                }
-            }
-            
-            #
-            # proceed with the original import
-            #
-            goto &{"$imported_package\::_import"};
-        };
+        *{"$calling_package\::import"}  = \&overloaded_import;
     }
     
     #
@@ -118,7 +88,7 @@ sub import {
     #
     _construct_functions($calling_package)
         if ($default_export);
-
+    
     #
     # create *OUT and *RAW in calling package to allow 'print' to work
     #   'print OUT' works, Components use a 'select OUT' to allow 'print' alone
@@ -129,6 +99,39 @@ sub import {
         tie *{"$calling_package\::RAW"}, $module, 0; # unescaped: RAW
         tie *{"$calling_package\::STDOUT"}, $module, 1; # escaped: STDOUT
     }
+}
+
+#
+# our importing packages' import() routine...
+#
+sub overloaded_import {
+    my $imported_package = $_[0];
+    my $calling_package = caller;
+    
+    no strict 'refs';
+    if (scalar(@{"$imported_package\::EXPORT_BLOCK"})) {
+        #
+        # process every recorded block() directive
+        #
+        my %declare;
+        
+        foreach my $symbol (@{"$imported_package\::EXPORT_BLOCK"}) {
+            *{"$calling_package\::$symbol"} = *{"$imported_package\::$symbol"};
+            
+            $declare{$symbol} = {
+                const => Catalyst::View::ByCode::Declare::tag_parser
+            };
+        }
+        
+        if (scalar(keys(%declare))) {
+            Devel::Declare->setup_for($calling_package, \%declare);
+        }
+    }
+    
+    #
+    # proceed with the original import
+    #
+    goto &{"$imported_package\::_import"};
 }
 
 ######################################## FILE HANDLE MANAGEMENT
@@ -357,7 +360,41 @@ sub attr {
 #
 # set a class inside a tag
 #
-sub class { $document->set_attr(class => join(' ', @_)); return; }
+sub class {
+    my @args = @_;
+    
+    ### TODO: think about:
+    #
+    # class '-bar';  - to remove 'bar'
+    # class '+foo';  - to add 'foo'
+    #
+    my %class;
+    my $class_name = $document->get_attr('class') || '';
+    if (ref($class_name) eq 'ARRAY') {
+        %class = map {($_ => 1)} @{$class_name};
+    } else {
+        %class = map {($_ => 1)} split(qr{\s+}xms, $class_name);
+    }
+    
+    my $operation = 0; # -1 = sub, 0 = set, 1 = add
+    foreach my $name (grep {$_} map {split qr{\s+}xms} @args) {
+        if ($name =~ s{\A([-+])}{}xms) {
+            $operation = $1 eq '-' ? -1 : +1;
+        }
+        if ($operation < 0) {
+            delete $class{$name};
+        } elsif ($operation > 0) {
+            $class{$name} = 1;
+        } else {
+            %class = ($name => 1);
+            $operation = +1;
+        }
+    }
+    
+    # was before: $document->set_attr(class => join(' ', @_));
+    $document->set_attr(class => join(' ', sort keys(%class)));
+    return; 
+}
 
 #
 # set an ID

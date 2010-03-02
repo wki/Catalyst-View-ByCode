@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 27;
+use Test::More;
 use Test::Exception;
 
 #
@@ -64,11 +64,27 @@ $e->set_attr(zap => {uu => 'ijklm'});
 is_deeply($e->attr->{zap}, {uu => 'ijklm'}, 'hash-ref attr is possible');
 is($e->as_string, '<xxx abc="4&#60;2" zap="uu:ijklm"></xxx>', 'tag w/ hash-attr gets stringified OK');
 $e->delete_attr('zap');
+$e->delete_attr('abc');
+
+$e->set_attr(someAttr => 42);
+is($e->as_string, '<xxx some-attr="42"></xxx>', 'tag w/ mixedCase attr gets stringified OK');
+$e->delete_attr('someAttr');
+
+$e->set_attr(my_attr => 4711);
+is($e->as_string, '<xxx my-attr="4711"></xxx>', 'tag w/ combined_name attr gets stringified OK');
+$e->delete_attr('my_attr');
+
+$e->set_attr(style => {zIndex => 1000});
+is($e->as_string, '<xxx style="z-index:1000"></xxx>', 'tag w/ mixedCase hashref-key gets stringified OK');
+$e->delete_attr('style');
 
 #
 # add some content
 #
+$e->set_attr(abc => '4<2');
 my $c = new Catalyst::View::ByCode::Markup::Element(content => 'blabla');
 $e->content([$c]);
 is($e->as_string, '<xxx abc="4&#60;2">blabla</xxx>', 'tag w/ attr w/ content is OK');
 is("pp$e", 'pp<xxx abc="4&#60;2">blabla</xxx>', 'stringified tag w/ attr w/ content is OK');
+
+done_testing();

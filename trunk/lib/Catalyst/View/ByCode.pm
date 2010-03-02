@@ -71,7 +71,7 @@ Catalyst::View::ByCode - Templating using pure Perl code
             head {
                 title { stash->{title} };
                 load Js => 'site.js';
-                load Css => 'site.js';
+                load Css => 'site.css';
             };
             body {
                 div header.noprint {
@@ -242,6 +242,10 @@ As usual for Perl, there is always more than one way to do it:
                             class => 'noprint silver',
                             style => 'display: none';
 
+the content goes into the curly-braced code block immediately following the
+tag. Every extra argument after the code block is converted into the tag's
+attributes.
+
 =item special content
 
     # using special methods
@@ -253,11 +257,66 @@ As usual for Perl, there is always more than one way to do it:
         'content'
     };
 
-=item tricky arguments
+Every attribute may be added to the latest opened tag using the C<attr> sub. However, there are some shortcuts:
 
-    div top.noprint.silver(style => 'display none') {'content'}
+=over 8
+
+=item id 'name'
+
+is equivalent to C<attr id => 'name'>
+
+=item class 'class'
+
+is the same as C<attr class => 'class'>
+
+=item on handler => 'some javascript code'
+
+produces the same result as C<attr onhandler => 'some javascript code'>
 
 =back
+
+=item tricky arguments
+
+    div top.noprint.silver(style => 'display: none') {'content'}
+
+=item even more tricky arguments
+
+    div top.noprint.silver(style => {display => 'none'}) {'content'}
+
+=back
+
+Every attribute may have almost any datatype you might think of:
+
+=over
+
+=item scalar
+
+Scalar values are taken verbatim.
+
+=item hashref
+
+Hash references are converted to semicolon-delimited pairs of the key, a colon
+and a value. The perfect solution for building inline CSS. Well, I know,
+nobody should do something, but sometimes...
+
+Keys consisting of underscore characters and CAPITAL letters are converted to
+dash-separated names. C<dataTarget> or C<data_target> both become C<data-target>.
+
+=item arrayref
+
+Array references are converted to space separated things.
+
+=item coderef -- FIXME: do we like this?
+
+no idea if we like this
+
+=item other refs
+
+all other references simply are stringified. This allows the various objects
+to forward stringification to their class-defined code.
+
+=back
+
 
 =head2 Special Methods
 

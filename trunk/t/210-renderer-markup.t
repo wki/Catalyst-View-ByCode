@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 41;
+use Test::More;
 use Test::Exception;
 
 #
@@ -82,22 +82,47 @@ lives_ok { span { class 'xxx'; class 'yyy' }; } 'adding a span-tag with 2 classe
 like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="yyy">\s*</span>\s*}xms, 'markup5 looks OK');
 
 
-# ### TODO: think about:  class '+xxx' to expand
-# lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 5 lives';
-# is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 5 is empty');
-# 
-# lives_ok { span { class 'xxx'; class '+yyy' }; } 'adding a span-tag with 2 classes lives';
-# like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="yyy">\s*</span>\s*}xms, 'markup5 looks OK');
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 6 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 6 is empty');
+
+lives_ok { span { class 'xxx'; class '+yyy' }; } 'adding a span-tag with +2 classes lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="xxx\s+yyy">\s*</span>\s*}xms, 'markup6 looks OK');
+
+
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 7 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 7 is empty');
+
+lives_ok { span { class 'xxx yyy'; class '-yyy' }; } 'adding a span-tag with 2-1 classes lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="xxx">\s*</span>\s*}xms, 'markup7 looks OK');
+
+
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 8 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 8 is empty');
+
+lives_ok { span { class 'xxx yyy'; class '-yyy +zzz' }; } 'adding a span-tag with 2-1+1 classes lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="xxx\s+zzz">\s*</span>\s*}xms, 'markup8 looks OK');
+
+
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 9 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 9 is empty');
+
+lives_ok { span { class 'xxx yyy'; class '-yyy', '+zzz' }; } 'adding a span-tag with 2-1+1 classes lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<span\s+class="xxx\s+zzz">\s*</span>\s*}xms, 'markup9 looks OK');
+
 
 #
 # attrs with linebreaks
 #
-lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 4 lives';
-is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 4 is empty');
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 10 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 10 is empty');
 
 lives_ok { div(id => 'xyz',
                bla => 'blubb') { 'test' }; } 'adding a div with line-break lives';
-like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+bla="blubb"\s+id="xyz">\s*test\s*</div>\s*}xms, 'markup4 looks OK');
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+bla="blubb"\s+id="xyz">\s*test\s*</div>\s*}xms, 'markup10 looks OK');
 
 #
 # attrs with linebreaks (2)
@@ -130,17 +155,17 @@ sub c {
 
 my $concept = Y->new;
 
-lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 5 lives';
-is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 5 is empty');
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 11 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 11 is empty');
 
 # this version failed before (2010-02-23):
 lives_ok { a(href => c->uri_for_action('concept/detail', $concept->db_id), 
              title => 'Details', 
              class => 'ajax', 
              'data-target' => '-new', 
-             'data-title' => 'Detail'
+             dataTitle => 'Detail'
              ) { 'xxx' } }
-         'adding a a-tag with line-break lives';
+         'adding a a-tag with more line-breaks and strange attributes lives';
 
 like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<a
                                                             \s+class="ajax"
@@ -148,5 +173,7 @@ like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<a
                                                             \s+data-title="Detail"
                                                             \s+href="bla"
                                                             \s+title="Details">
-                                                            \s*xxx\s*</a>\s*}xms, 'markup5 looks OK');
+                                                            \s*xxx\s*</a>\s*}xms, 'markup11 looks OK');
 
+
+done_testing();

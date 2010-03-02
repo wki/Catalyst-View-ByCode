@@ -2,6 +2,7 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
+   ### done 2010-03-01
    - find a way to add a Devel::Declare Handler if a 'block xxx' defined
      sub is imported into another template.
      
