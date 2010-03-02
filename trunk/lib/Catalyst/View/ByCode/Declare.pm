@@ -118,7 +118,6 @@ sub parse_tag_declaration {
     if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
         # looks like an ID
         my $name = strip_name;
-        #$extras .= ($extras ? ' ' : '') . "id '$name';";
         $extras .= " id => '$name',";
     }
     
@@ -130,7 +129,6 @@ sub parse_tag_declaration {
         push @class, strip_name;
     }
     if (scalar(@class)) {
-        # $extras .= ($extras ? ' ' : '') . "class '" . join(' ', @class) . "';";
         $extras .= " class => '" . join(' ', @class) . "',";
     }
     
@@ -141,11 +139,9 @@ sub parse_tag_declaration {
     if ($proto) {
         ###
         ### BAD HACK: multiline (...) things will otherwise fail
+        ###           must be very tolerant!
         ###
         $proto =~ s{\s*[\r\n]\s*}{}xmsg;
-        
-        # this old version was too strict and failed:
-        # $proto =~ s{,\s*[\r\n]\s*(\w+)}{, $1}xmsg;
         
         $extras .= " $proto,";
     }

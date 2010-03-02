@@ -61,42 +61,6 @@ sub BUILD {
     #_stringify_attr_values($self->attr);
 }
 
-# #
-# # attr setting
-# #
-# around set_attr => sub {
-#     my $orig = shift;
-#     my $self = shift;
-#     my %attr = @_;
-#     
-#     # warn "in 'around set_attr'...";
-# 
-#     _stringify_attr_values(\%attr);
-#     
-#     $orig->($self, %attr);
-# };
-
-# #
-# # helper: stringify attr values
-# #
-# sub _stringify_attr_values {
-#     my $attr = shift; # \%attr
-#     
-#     # warn "stringifying attr values";
-#     foreach my $key (keys(%{$attr})) {
-#         my $value = $attr->{$key};
-#         if (!ref($value)) {
-#             # do nothing
-#         } elsif (ref($value) eq 'ARRAY') {
-#             $attr->{$key} = join(' ', @{$value});
-#         } elsif (ref($value) eq 'HASH') {
-#             $attr->{$key} = join(';', map {"$_:$value->{$_}"} keys(%{$value}));
-#         } else {
-#             $attr->{$key} = "$value";
-#         }
-#     }
-# }
-
 #
 # helper: stringify a single attr value
 #
@@ -124,8 +88,7 @@ sub _stringify_attr_value {
 sub _key {
     my $key = shift;
     
-    $key =~ s{([A-Z])}{-\l$1}xmsg;
-    $key =~ s{_}{-}xmsg;
+    $key =~ s{([A-Z])|_}{-\l$1}xmsg;
     
     return $key;
 }
@@ -149,7 +112,6 @@ override as_string => sub {
         $result .= "\n" . (' ' x ($INDENT_STEP * $indent_level));
     }
     $result .= qq{<${\$self->tag}};
-    # OLD: $result .= qq{ $_="${\$self->_html_escape($self->attr->{$_})}"}
     $result .= qq{ ${\_key($_)}="${\$self->_html_escape(_stringify_attr_value($self->attr->{$_}))}"}
         for sort keys(%{$self->attr});
     

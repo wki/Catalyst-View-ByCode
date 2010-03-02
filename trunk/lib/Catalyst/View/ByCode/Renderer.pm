@@ -109,6 +109,7 @@ sub overloaded_import {
     my $calling_package = caller;
     
     no strict 'refs';
+    
     if (scalar(@{"$imported_package\::EXPORT_BLOCK"})) {
         #
         # process every recorded block() directive
@@ -200,7 +201,6 @@ sub template(&) {
     
     no strict 'refs';
     *{"$package\::RUN"} = $code;
-    use strict 'refs';
 }
 
 #
@@ -231,8 +231,6 @@ sub block($&;@) {
     # mark this sub as a special exportable
     #
     ${"$package\::EXPORT_BLOCK"}{$name} = 1;
-    
-    use strict 'refs';
 }
 
 #
@@ -363,20 +361,25 @@ sub attr {
 sub class {
     my @args = @_;
     
-    ### TODO: think about:
     #
-    # class '-bar';  - to remove 'bar'
-    # class '+foo';  - to add 'foo'
+    # class 'huhu';              - set 'huhu' (replacing previous name)
+    # class 'huhu zzz';          - set 'huhu' and 'zzz' (replacing previous name/s)
+    # class '-bar';              - remove 'bar'
+    # class '-bar baz';          - remove 'bar' and 'baz'
+    # class '+foo';              - add 'foo'
+    # class '+foo moo'           - add 'foo' and 'moo'
+    # class '+foo -bar baz'      - add 'foo', remove 'bar' and 'baz'
+    # class '+foo','-bar','baz'  - add 'foo', remove 'bar' and 'baz'
     #
     my %class;
     my $class_name = $document->get_attr('class') || '';
     if (ref($class_name) eq 'ARRAY') {
-        %class = map {($_ => 1)} @{$class_name};
+        %class = map {($_ => 1)} grep {$_} @{$class_name};
     } else {
-        %class = map {($_ => 1)} split(qr{\s+}xms, $class_name);
+        %class = map {($_ => 1)} grep {$_} split(qr{\s+}xms, $class_name);
     }
     
-    my $operation = 0; # -1 = sub, 0 = set, 1 = add
+    my $operation = 0; # -1 = sub, 0 = set, +1 = add
     foreach my $name (grep {$_} map {split qr{\s+}xms} @args) {
         if ($name =~ s{\A([-+])}{}xms) {
             $operation = $1 eq '-' ? -1 : +1;
@@ -391,7 +394,6 @@ sub class {
         }
     }
     
-    # was before: $document->set_attr(class => join(' ', @_));
     $document->set_attr(class => join(' ', sort keys(%class)));
     return; 
 }

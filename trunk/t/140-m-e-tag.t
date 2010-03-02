@@ -8,6 +8,33 @@ use Test::Exception;
 BEGIN { use_ok('Catalyst::View::ByCode::Markup::Tag') };
 
 #
+# low-level: check camelCase key unification
+#
+my $key = *{"Catalyst::View::ByCode::Markup::Tag::_key"}{CODE};
+is($key->('somename'), 'somename', 'lower case stays the same');
+is($key->('someName'), 'some-name', 'single camel case works');
+is($key->('someNAme'), 'some-n-ame', 'multi camel case works');
+is($key->('some_name'), 'some-name', 'dashed names work');
+is($key->('some_Name'), 'some--name', 'dashed Camel names work');
+is($key->('Somename'), '-somename', 'dashed beginning works');
+is($key->('_somename'), '-somename', 'underscored beginning works');
+is($key->('somenamE'), 'somenam-e', 'Camel ending works');
+is($key->('somename_'), 'somename-', 'underscored ending works');
+
+#
+# low-level: check attr stringification
+#
+my $str = *{"Catalyst::View::ByCode::Markup::Tag::_stringify_attr_value"}{CODE};
+is($str->('a string'), 'a string', 'scalar values are stringified right');
+is($str->(undef), undef, 'undef is stringified right');
+is($str->([qw(abc xyz)]), 'abc xyz', 'array ref is stringified right');
+is($str->({foo => 'bar'}), 'foo:bar', 'hash ref 1 is stringified right');
+is($str->({foo => 'bar', zzz => 42}), 'foo:bar;zzz:42', 'hash ref 2 is stringified right');
+is($str->({zIndex => 1000}), 'z-index:1000', 'hash ref 3 is stringified right');
+my $bla = \'haha';
+is($str->($bla), "$bla", 'other ref is stringified right');
+
+#
 # instantiate a element
 #
 my $e;
