@@ -83,6 +83,7 @@ sub add_text {
             $self->add_text($text->render(), 1);
         } else {
             ### TODO: can we do more things that act natural?
+            $self->add_text("$text");
         }
     } elsif (ref($text)) {
         # TODO -- do something meaningful

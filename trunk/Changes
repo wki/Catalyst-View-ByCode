@@ -17,6 +17,10 @@ Revision history for Catalyst-View-ByCode
           class '-a' 'uuu'                   is now: 'selected'
           class '-selected +hui foo'         is now: 'foo hui'
         
+        2010-03-09
+        * íntroduced stringification in Document for tag-content objects
+        * used OUT/RAW/STDOUT in Renderer to avoid 'possible typo' warnings
+        
 0.05    2010-02-23
         * fixed a bug that made certain multiline prototype-like attributes fail
         * added a test to verify that
