@@ -375,6 +375,7 @@ sub class {
     # class '+foo moo'           - add 'foo' and 'moo'
     # class '+foo -bar baz'      - add 'foo', remove 'bar' and 'baz'
     # class '+foo','-bar','baz'  - add 'foo', remove 'bar' and 'baz'
+    # class qw(+foo -bar baz)    - same thing.
     #
     my %class;
     my $class_name = $document->get_attr('class') || '';

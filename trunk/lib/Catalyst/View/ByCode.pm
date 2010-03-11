@@ -269,19 +269,41 @@ is equivalent to C<attr id => 'name'>
 
 is the same as C<attr class => 'class'>
 
+However, the C<class> method is special. It allows to specify a
+space-separated string, a list of names or a combination of both. Class names
+prefixed with C<-> or C<+> are treated special. After a minus prefixed class
+name every following name is subtracted from the previous list of class names.
+After a plus prefixed name all following names are added to the class list. A
+list of class names without a plus/minus prefix will start with an empty class
+list and then append all subsequentially following names.
+
+    div.foo { class 'abc def ghi' };             will yield 'abc def ghi'
+    div.foo { class '+def xyz' };                will yield 'foo def xyz'
+    div.foo { class '-foo +bar' };               will yield 'bar'
+
 =item on handler => 'some javascript code'
 
 produces the same result as C<attr onhandler => 'some javascript code'>
+
+    div {
+        on click => q{alert('you clicked me')};
+    };
 
 =back
 
 =item tricky arguments
 
-    div top.noprint.silver(style => 'display: none') {'content'}
+    div top.noprint.silver(style => 'display: none') {'content'};
 
 =item even more tricky arguments
 
-    div top.noprint.silver(style => {display => 'none'}) {'content'}
+    div top.noprint.silver(style => {display => 'none'}) {'content'};
+
+=item tricky arguments and CamelCase
+
+    div top.noprint.silver(style => {marginTop => '20px'}) {'content'};
+
+C<marginTop> or C<margin_top> will get converted to C<margin-top>.
 
 =back
 
@@ -347,17 +369,22 @@ the special sub C<block_content>. A simple example makes this clearer:
     # define a block:
     block infobox {
         my $headline = attr('headline') || 'untitled';
+        my $id = attr('id');
+        my $class = attr('class');
         div.infobox {
+            id $id if ($id);
+            class $class if ($class);
+            
             div.head { $headline };
             div.info { block_content };
         };
     };
     
     # later we use the block:
-    infobox(headline => 'Our Info') { 'just my 2 cents' };
+    infobox some_id.someclass(headline => 'Our Info') { 'just my 2 cents' };
     
     # this HTML will get generated:
-    <div class="infobox">
+    <div class="someclass" id="some_id">
       <div class="head">Our Info</div>
       <div class="info">just my 2 cents</div>
     </div>
