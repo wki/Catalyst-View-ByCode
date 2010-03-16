@@ -9,9 +9,13 @@ SYNOPSIS
         sub index :Path :Args(0) {
             my ($self, $c) = @_;
         
+            # unless defined as default_view in your config, specify:
             $c->stash->{current_view} = 'ByCode';
         
             $c->stash->{title} = 'Hello ByCode';
+        
+            # if omitted, would default to 
+            # controller_namespace / action_namespace .pl
             $c->stash->{template} = 'hello.pl';
         }
 
@@ -19,27 +23,29 @@ SYNOPSIS
         # REMARK: 
         #    use 'c' instead of '$c'
         #    prefer 'stash->{...}' to 'c->stash->{...}'
-        html {
-            head {
-                title { c->stash->{title} };
-                load Js => 'site.js';
-                load Css => 'site.js';
-            };
-            body {
-                div header.noprint {
-                    ul.topnav {
-                        li {'home'};
-                        li {'surprise'};
-                    };
+        template {
+            html {
+                head {
+                    title { stash->{title} };
+                    load Js => 'site.js';
+                    load Css => 'site.css';
                 };
-                div content {
-                    h1 { c->stash->{title} };
-                    div { 'hello.pl is running! };
-                    img(src => '/static/images/catalyst_logo.png');
+                body {
+                    div header.noprint {
+                        ul.topnav {
+                            li {'home'};
+                            li {'surprise'};
+                        };
+                    };
+                    div content {
+                        h1 { stash->{title} };
+                        div { 'hello.pl is running!' };
+                        img(src => '/static/images/catalyst_logo.png');
+                    };
                 };
             };
         };
-        # 266 characters without white space
+        # 274 characters without white space
     
         # 4) expect to get this HTML generated:
         <html>
@@ -92,6 +98,7 @@ DESCRIPTION
     reasonable behavior during markup generation.
 
   Tags
+
     Every tag known in HTML (or defined in HTML::Tagset to be precise) gets
     exported to a template's namespace during its compilation and can be
     used as expected. However, there are some exceptions which would collide
@@ -109,6 +116,14 @@ DESCRIPTION
 
     superscript generates a <sup> tag
 
+    meta_tag    generates a <meta> tag
+
+    quote       generates a <q> tag
+
+    strike      generates a <s<gt> tag
+
+    map_tag     generates a <map> tag
+
     Internally, every tag subroutine is defined with a prototype like
 
         sub div(;&@) { ... }
@@ -118,6 +133,7 @@ DESCRIPTION
     matter of nesting calls into blocks.
 
   Content
+
     There are several ways to generate content which is inserted between the
     opening and the closing tag:
 
@@ -137,74 +153,169 @@ DESCRIPTION
             print RAW '<?xxx must be here for internal reasons ?>';
 
   Attributes
-        As usual for Perl, there is always more than one way to do it:
 
-        prefixing or appending
-            Every tag may get prefixed or appended by a `with' method
-            containing all attributes that should go into the opening tag.
+    As usual for Perl, there is always more than one way to do it:
 
-                # prefixing
-                with {id => 'top', 
-                      class => 'noprint silver', 
-                      style => 'display: none'} div {'content'};
-    
-                # prefixing using other data types
-                with {id => 'top', 
-                      class => [qw(noprint silver)], 
-                      style => {display => 'none'}} div {'content'};
-    
-                # using 'with' more than once
-                with {id => 'top'}
-                with {class => 'noprint silver'}
-                div {'content'}
-                with {style => 'display: none'};
-    
-                # always generates this:
-                <div id="top" class="noprint silver" style="display: none">content</div>
+    old-school perl
+            # appending attributes after tag
+            div { ... content ... } id => 'top', 
+                                    class => 'noprint silver',
+                                    style => 'display: none';
 
-        special content
-                # using special methods
-                div {
-                    id 'top';
-                    class 'noprint silver';
-                    attr style => 'display: none';
+        the content goes into the curly-braced code block immediately
+        following the tag. Every extra argument after the code block is
+        converted into the tag's attributes.
+
+    special content
+            # using special methods
+            div {
+                id 'top';
+                class 'noprint silver';
+                attr style => 'display: none';
         
-                    'content'
-                };
+                'content'
+            };
 
-        tricky arguments
-                div top.noprint.silver(style => 'display none') {'content'}
+        Every attribute may be added to the latest opened tag using the
+        `attr' sub. However, there are some shortcuts:
+
+        id 'name'
+                is equivalent to `attr id =' 'name'>
+
+        class 'class'
+                is the same as `attr class =' 'class'>
+
+                However, the `class' method is special. It allows to specify
+                a space-separated string, a list of names or a combination
+                of both. Class names prefixed with `-' or `+' are treated
+                special. After a minus prefixed class name every following
+                name is subtracted from the previous list of class names.
+                After a plus prefixed name all following names are added to
+                the class list. A list of class names without a plus/minus
+                prefix will start with an empty class list and then append
+                all subsequentially following names.
+
+                    div.foo { class 'abc def ghi' };             will yield 'abc def ghi'
+                    div.foo { class '+def xyz' };                will yield 'foo def xyz'
+                    div.foo { class '-foo +bar' };               will yield 'bar'
+
+        on handler => 'some javascript code'
+                produces the same result as `attr onhandler =' 'some
+                javascript code'>
+
+                    div {
+                        on click => q{alert('you clicked me')};
+                    };
+
+    tricky arguments
+            div top.noprint.silver(style => 'display: none') {'content'};
+
+    even more tricky arguments
+            div top.noprint.silver(style => {display => 'none'}) {'content'};
+
+    tricky arguments and CamelCase
+            div top.noprint.silver(style => {marginTop => '20px'}) {'content'};
+
+        `marginTop' or `margin_top' will get converted to `margin-top'.
+
+    Every attribute may have almost any datatype you might think of:
+
+    scalar
+        Scalar values are taken verbatim.
+
+    hashref
+        Hash references are converted to semicolon-delimited pairs of the
+        key, a colon and a value. The perfect solution for building inline
+        CSS. Well, I know, nobody should do something, but sometimes...
+
+        Keys consisting of underscore characters and CAPITAL letters are
+        converted to dash-separated names. `dataTarget' or `data_target'
+        both become `data-target'.
+
+    arrayref
+        Array references are converted to space separated things.
+
+    coderef -- FIXME: do we like this?
+        no idea if we like this
+
+    other refs
+        all other references simply are stringified. This allows the various
+        objects to forward stringification to their class-defined code.
 
   Special Methods
-        doctype
-        load
+
+    doctype
+    load
+  Building Reusable blocks
+
+    You might build a reusable block line the following calls:
+
+        block 'block_name' => sub { ... };
+    
+        # or shorter:
+        block block_name { ... };
+
+    The block might get used like a tag:
+
+        block_name { ... some content ... };
+
+    If a block-call contains a content it can get rendered inside the block
+    using the special sub `block_content'. A simple example makes this
+    clearer:
+
+        # define a block:
+        block infobox {
+            my $headline = attr('headline') || 'untitled';
+            my $id = attr('id');
+            my $class = attr('class');
+            div.infobox {
+                id $id if ($id);
+                class $class if ($class);
+            
+                div.head { $headline };
+                div.info { block_content };
+            };
+        };
+    
+        # later we use the block:
+        infobox some_id.someclass(headline => 'Our Info') { 'just my 2 cents' };
+    
+        # this HTML will get generated:
+        <div class="someclass" id="some_id">
+          <div class="head">Our Info</div>
+          <div class="info">just my 2 cents</div>
+        </div>
+
+    every block defined in a package is auto-added to the packages `@EXPORT'
+    array and mangled in a special way to make the magic calling syntax work
+    after importing it into another package.
 
 CONFIGURATION
-        A simple configuration of a dereived Controller could look like
-        this:
+    A simple configuration of a derived Controller could look like this:
 
-            __PACKAGE__->config(
-                # Change extension (default: .pl)
-                extension => '.pl',
+        __PACKAGE__->config(
+            # Change extension (default: .pl)
+            extension => '.pl',
         
-                # Set the location for .pl files (default: root/bycode)
-                root_dir => cat_app->path_to( 'root', 'bycode' ),
+            # Set the location for .pl files (default: root/bycode)
+            root_dir => cat_app->path_to( 'root', 'bycode' ),
         
-                # This is your wrapper template located in root_dir (default: wrapper.pl)
-                wrapper => 'wrapper.pl',
-            );
+            # This is your wrapper template located in root_dir (default: wrapper.pl)
+            wrapper => 'wrapper.pl',
+        
+            # all these modules are use()'d automatically
+            include => [Some::Module Another::Package],
+        );
 
 METHODS
   process
-        fulfill the request (called from Catalyst)
 
-  render
-        render the request
+    fulfill the request (called from Catalyst)
 
 AUTHOR
-        Wolfgang Kinkeldei, <wolfgang@kinkeldei.de>
+    Wolfgang Kinkeldei, <wolfgang@kinkeldei.de>
 
 LICENSE
-        This library is free software, you can redistribute it and/or modify
-        it under the same terms as Perl itself.
+    This library is free software, you can redistribute it and/or modify it
+    under the same terms as Perl itself.
 

@@ -33,7 +33,7 @@ use UUID::Random;
 use Path::Class::File;
 use File::Spec;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 our $compiling_package; # local() ized during a compile
 

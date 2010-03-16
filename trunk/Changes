@@ -1,5 +1,8 @@
 Revision history for Catalyst-View-ByCode
 
+0.07    2010-03-13
+        * docs added, first CPAN upload
+
 0.06    2010-03-01
         * changed version to 0.06
         * updated META.yml, MANIFEST

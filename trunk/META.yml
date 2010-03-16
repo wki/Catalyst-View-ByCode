@@ -1,36 +1,12 @@
 ---
-abstract: 'Templating using pure Perl code'
+name: Catalyst-View-ByCode
+version: 0.07
 author:
   - 'Wolfgang Kinkeldei <wki@cpan.org>'
-configure_requires:
-  Module::Build: 0.36
-dynamic_config: 0
-generated_by: 'Module::Build version 0.3601'
+abstract: Templating using pure Perl code
 license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Catalyst-View-ByCode
-provides:
-  Catalyst::Helper::View::ByCode:
-    file: lib/Catalyst/Helper/View/ByCode.pm
-  Catalyst::View::ByCode:
-    file: lib/Catalyst/View/ByCode.pm
-    version: 0.06
-  Catalyst::View::ByCode::Declare:
-    file: lib/Catalyst/View/ByCode/Declare.pm
-  Catalyst::View::ByCode::Markup::Document:
-    file: lib/Catalyst/View/ByCode/Markup/Document.pm
-  Catalyst::View::ByCode::Markup::Element:
-    file: lib/Catalyst/View/ByCode/Markup/Element.pm
-  Catalyst::View::ByCode::Markup::EscapedText:
-    file: lib/Catalyst/View/ByCode/Markup/EscapedText.pm
-  Catalyst::View::ByCode::Markup::Structured:
-    file: lib/Catalyst/View/ByCode/Markup/Structured.pm
-  Catalyst::View::ByCode::Markup::Tag:
-    file: lib/Catalyst/View/ByCode/Markup/Tag.pm
-  Catalyst::View::ByCode::Renderer:
-    file: lib/Catalyst/View/ByCode/Renderer.pm
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
   Catalyst::Runtime: 5.80
   Devel::Declare: 0.005007
@@ -47,6 +23,29 @@ requires:
   UUID::Random: 0.04
   YAML: 0.68
   perl: v5.8.8
-resources:
-  license: http://dev.perl.org/licenses/
-version: 0.06
+configure_requires:
+  Module::Build: 0.35
+provides:
+  Catalyst::Helper::View::ByCode:
+    file: lib/Catalyst/Helper/View/ByCode.pm
+  Catalyst::View::ByCode:
+    file: lib/Catalyst/View/ByCode.pm
+    version: 0.07
+  Catalyst::View::ByCode::Declare:
+    file: lib/Catalyst/View/ByCode/Declare.pm
+  Catalyst::View::ByCode::Markup::Document:
+    file: lib/Catalyst/View/ByCode/Markup/Document.pm
+  Catalyst::View::ByCode::Markup::Element:
+    file: lib/Catalyst/View/ByCode/Markup/Element.pm
+  Catalyst::View::ByCode::Markup::EscapedText:
+    file: lib/Catalyst/View/ByCode/Markup/EscapedText.pm
+  Catalyst::View::ByCode::Markup::Structured:
+    file: lib/Catalyst/View/ByCode/Markup/Structured.pm
+  Catalyst::View::ByCode::Markup::Tag:
+    file: lib/Catalyst/View/ByCode/Markup/Tag.pm
+  Catalyst::View::ByCode::Renderer:
+    file: lib/Catalyst/View/ByCode/Renderer.pm
+generated_by: Module::Build version 0.35
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
