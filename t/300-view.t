@@ -3,7 +3,7 @@ use Test::Exception;
 use Catalyst ();
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use Path::Class::File;
+use Path::Class;
 
 # setup our Catalyst :-)
 my $c = Catalyst->new();
@@ -47,7 +47,7 @@ ok(!$subref, 'result of compilation is not a subref');
 lives_ok { $subref = $view->_compile_template($c, 'simple_template.pl') } 'compilation lives';
 is(ref($subref), 'CODE', 'compile result is a CODEref');
 
-is(${"Catalyst::Template::simple_template::_filename"}, "$FindBin::Bin/root/bycode/simple_template.pl", 'internal filename looks OK');
+is(${"Catalyst::Template::simple_template::_filename"}, file("$FindBin::Bin", qw(root bycode simple_template.pl)), 'internal filename looks OK');
 ok(${"Catalyst::Template::simple_template::_offset"}, 'internal offset is set');
 ok(${"Catalyst::Template::simple_template::_mtime"}, 'internal mtime is set');
 ok(${"Catalyst::Template::simple_template::_tempfile"}, 'internal tempfile is set');

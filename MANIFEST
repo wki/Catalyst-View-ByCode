@@ -1,5 +1,16 @@
 Build.PL
 Changes
+inc/Module/AutoInstall.pm
+inc/Module/Install.pm
+inc/Module/Install/AutoInstall.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Can.pm
+inc/Module/Install/Fetch.pm
+inc/Module/Install/Include.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Win32.pm
+inc/Module/Install/WriteAll.pm
 lib/Catalyst/Helper/View/ByCode.pm
 lib/Catalyst/View/ByCode.pm
 lib/Catalyst/View/ByCode/Declare.pm
@@ -30,3 +41,6 @@ t/root/bycode/erroneous_template.pl
 t/root/bycode/including_template.pl
 t/root/bycode/simple_template.pl
 TODO.txt
+trunk/Build.PL
+trunk/Makefile.PL
+trunk/MANIFEST.SKIP
