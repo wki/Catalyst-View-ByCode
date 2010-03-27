@@ -1,4 +1,3 @@
-Build.PL
 Changes
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
@@ -41,6 +40,3 @@ t/root/bycode/erroneous_template.pl
 t/root/bycode/including_template.pl
 t/root/bycode/simple_template.pl
 TODO.txt
-trunk/Build.PL
-trunk/Makefile.PL
-trunk/MANIFEST.SKIP
