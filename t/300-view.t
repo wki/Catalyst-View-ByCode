@@ -83,8 +83,6 @@ like(Catalyst::View::ByCode::Renderer::get_markup(),
         \s*}xms, 
      'block markup looks OK');
 
-#done_testing; exit;
-
 #
 # test including a package that defines a block
 #
@@ -101,5 +99,19 @@ is(ref($subref), 'CODE', 'compile including result is a CODEref');
 lives_ok {$subref->()} 'calling block_template lives';
 like(Catalyst::View::ByCode::Renderer::get_markup(), 
      qr{<div \s+ id="includable_block">\s*i\s+am\s+included.*</div>}xms, 'including markup looks good');
+
+#
+# test a template acting as a wrapper
+#
+$c->stash->{yield}->{content} = 'simple_template.pl';
+$subref = 0;
+lives_ok {$view->init_markup($c)} 'initing block markup lives';
+lives_ok {$subref = $view->_compile_template($c, 'wrap_template.pl')} 'compilation wrapping template lives';
+is(ref($subref), 'CODE', 'compile wrapping result is a CODEref');
+lives_ok {$subref->()} 'calling wrap_template lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{<body>\s*<div\s+id="main">\s*Perl\s+rocks\s*</div>\s*</body>}xms, 'including markup looks good');
+
+### TODO: test more kinds of 'yield()' usage.
 
 done_testing();

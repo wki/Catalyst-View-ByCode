@@ -1,5 +1,13 @@
 Revision history for Catalyst-View-ByCode
 
+        2010-03-29
+        * fixed a bug that made block-definitions defined in 'old-scholl'
+          fashion unable to read attr()-values. Only declare-defined
+          blocks could read attr()-values.
+          Added a test to verify the improvement.
+          Bug reported by Phil Soehnlein
+        * added a yield-test
+
 0.09    2010-03-27
         * updated test requirements
         

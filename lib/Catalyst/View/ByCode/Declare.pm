@@ -54,10 +54,9 @@ sub next_char {
     return substr($linestr, $Offset, 1);
 }
 
-# CURRENTLY NOT NEEDED
-# #
-# # non-destructively read next word (=token)
-# #
+#
+# non-destructively read next word (=token)
+#
 sub next_word {
     skip_space;
     
@@ -296,7 +295,6 @@ sub block_parser {
         return if (declarator_is_hash_key);
 
         my $sub_name;
-        #if (next_char =~ m{\A [a-zA-Z_]}xms) {
         if (next_word =~ m{\A [a-zA-Z_]\w* \z}xms) {
             # skip the block_name to append a '=> sub' afterwards
             $sub_name = skip_word;
@@ -305,25 +303,12 @@ sub block_parser {
                 $Offset += 8;
             }
         } else {
-            # another problem: this thing does not recognize:
-            #  q{...}, qq{...}, '...' or "..." constructs...
-            #
-            $sub_name = skip_word;
-            warn "SUBNAME: -- $sub_name --";
+            # take the next string we find as sub_name
+            # silently assume correct perl-syntax
+            Devel::Declare::toke_scan_str($Offset);
+            $sub_name = Devel::Declare::get_lex_stuff();
+            Devel::Declare::clear_lex_stuff();
         }
-        
-        # OLD and buggy code:
-        # # magic only starts if initiated with a bare-word
-        # return if (next_char !~ m{\A[a-zA-Z_]}xms);
-        # 
-        # # skip the block_name to append a '=> sub' afterwards
-        # my $sub_name = skip_word;
-        # 
-        # # bare-word must be followed by a code-block
-        # return if (next_char ne '{');
-        # 
-        # inject(' => sub ');
-        # $Offset += 8;
         
         # insert a preliminary sub named $sub_name 
         # into the caller's namespace to make compiler happy
