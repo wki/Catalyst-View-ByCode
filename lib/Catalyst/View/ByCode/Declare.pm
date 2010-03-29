@@ -58,15 +58,15 @@ sub next_char {
 # #
 # # non-destructively read next word (=token)
 # #
-# sub next_word {
-#     skip_space;
-#     
-#     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
-#         my $linestr = Devel::Declare::get_linestr;
-#         return substr($linestr, $Offset, $length);
-#     }
-#     return '';
-# }
+sub next_word {
+    skip_space;
+    
+    if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
+        my $linestr = Devel::Declare::get_linestr;
+        return substr($linestr, $Offset, $length);
+    }
+    return '';
+}
 
 #
 # destructively read a valid name if possible
@@ -288,23 +288,42 @@ sub add_tag_parser {
 # initiated after compiling 'block'
 # parses: 'block' name '{'
 # injects ' => sub' after name
+# always installs a parser for block() calls.
 #
 sub block_parser {
     return sub {
         local ($Declarator, $Offset) = @_;
         return if (declarator_is_hash_key);
 
-        # magic only starts if initiated with a bare-word
-        return if (next_char !~ m{\A[a-zA-Z_]}xms);
+        my $sub_name;
+        #if (next_char =~ m{\A [a-zA-Z_]}xms) {
+        if (next_word =~ m{\A [a-zA-Z_]\w* \z}xms) {
+            # skip the block_name to append a '=> sub' afterwards
+            $sub_name = skip_word;
+            if (next_char eq '{') {
+                inject(' => sub ');
+                $Offset += 8;
+            }
+        } else {
+            # another problem: this thing does not recognize:
+            #  q{...}, qq{...}, '...' or "..." constructs...
+            #
+            $sub_name = skip_word;
+            warn "SUBNAME: -- $sub_name --";
+        }
         
-        # skip the block_name to append a '=> sub' afterwards
-        my $sub_name = skip_word;
-        
-        # bare-word must be followed by a code-block
-        return if (next_char ne '{');
-        
-        inject(' => sub ');
-        $Offset += 8;
+        # OLD and buggy code:
+        # # magic only starts if initiated with a bare-word
+        # return if (next_char !~ m{\A[a-zA-Z_]}xms);
+        # 
+        # # skip the block_name to append a '=> sub' afterwards
+        # my $sub_name = skip_word;
+        # 
+        # # bare-word must be followed by a code-block
+        # return if (next_char ne '{');
+        # 
+        # inject(' => sub ');
+        # $Offset += 8;
         
         # insert a preliminary sub named $sub_name 
         # into the caller's namespace to make compiler happy

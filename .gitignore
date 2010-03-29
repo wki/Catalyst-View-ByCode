@@ -7,3 +7,4 @@ blib/
 inc/
 *.bak
 pm_to_blib
+Catalyst-View*.tar.gz
