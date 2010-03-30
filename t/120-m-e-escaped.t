@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 12;
+use Test::More;
 use Test::Exception;
 
 #
@@ -28,3 +28,5 @@ $e->content('huhu"i"');
 is($e->content, 'huhu"i"', 'content is right');
 is($e->as_string, 'huhu&#34;i&#34;', 'escaped content is right');
 is("x${e}x", 'xhuhu&#34;i&#34;x', 'stringified escaped content is right');
+
+done_testing();

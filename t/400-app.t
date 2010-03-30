@@ -1,4 +1,5 @@
-use Test::More 'no_plan';
+# -*- perl -*-
+use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -22,3 +23,5 @@ is($view->extension, '.pl', 'unset config is at its default value');
 is($view->root_dir,  'xxroot/xxbycode', 'config setting from View looks good');
 is($view->wrapper,   'xxx.pl', 'config setting from app looks good');
 is_deeply($view->include, ['List::MoreUtil'], 'app has precedence over view');
+
+done_testing();

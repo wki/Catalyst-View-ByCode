@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 12;
+use Test::More;
 use Test::Exception;
 
 #
@@ -31,3 +31,5 @@ $e->content('huhu');
 is($e->content, 'huhu', 'content is right');
 is($e->as_string, 'huhu', 'as_string is right');
 is("x${e}x", 'xhuhux', 'stringified content is right');
+
+done_testing();

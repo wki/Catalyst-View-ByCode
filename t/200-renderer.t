@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 29;
+use Test::More;
 use Test::Exception;
 
 #
@@ -65,3 +65,5 @@ isa_ok(markup_object(), 'Catalyst::View::ByCode::Markup::Document', 'markup obje
 
 lives_ok {markup_object->add_tag('div', style => {zIndex => 999})} 'adding a tag with lower_cased attr-hash works';
 like(get_markup(), qr{\s*<div\s+style="z-index:\s*999">\s*</div>\s*}xms, 'markup looks good');
+
+done_testing();

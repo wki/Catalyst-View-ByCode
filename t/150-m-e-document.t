@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 17;
+use Test::More;
 use Test::Exception;
 
 #
@@ -49,3 +49,4 @@ ok(!$d->has_opened_tag, 'has_opened_tag reports closed');
 $d->add_text('the end');
 like($d->as_string, qr{<div\s+class="fghi"\s+id="97">\s*huhu\s*</div>\s*the\s+end}xms, 'content is <div class id>huhu</div>the end');
 
+done_testing();

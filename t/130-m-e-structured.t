@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More tests => 13;
+use Test::More;
 use Test::Exception;
 
 #
@@ -38,3 +38,5 @@ $e->add_content($et);
 ok($e->has_content, 'has_content() still reports non-empty');
 is($e->as_string, 'hello&#60;hello', 'combination renders fine');
 is("$e", 'hello&#60;hello', 'stringified combination renders fine');
+
+done_testing();
