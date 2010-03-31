@@ -1,0 +1,51 @@
+=head1 NAME
+
+Catalyst::View::ByCode::Manual - A simple usage guide
+
+
+
+=head1 CONFIGURATION
+
+explain all of these config directives:
+
+extension
+root_dir
+wrapper
+  -- see "Using a wrapper" below
+include
+  -- see "Avoiding repetitions"
+
+
+
+=head1 USAGE
+
+=head2 A Simple template
+
+=head2 Using a wrapper
+
+=head2 Setting hooks at various places
+
+=head2 Avoiding repetitions
+
+=head2 Including FormFu or FormHandler
+
+=head2 Create your own error page
+
+
+
+=head1 TRICKS
+
+=head2 Shortcuts
+- TODO: input(disabled => 1) instead of input(disabled => 'disabled')
+- TODO: input(checked => 1) instead of input(disabled => 'checked')
+- TODO: option(selected => 1) instead of option(selected => 'selected')
+
+some_tag.some_class {
+    class '+another_class';
+}
+
+
+
+=head1 CAVEATS
+
+=cut

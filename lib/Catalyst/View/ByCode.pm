@@ -340,13 +340,33 @@ to forward stringification to their class-defined code.
 =back
 
 
-=head2 Special Methods
+=head2 Exported subs
 
 =over
 
+=item attr
+
+=item block
+
+=item block_content
+
+=item c
+
+=item class
+
 =item doctype
 
+=item id
+
 =item load
+
+=item on
+
+=item stash
+
+=item template
+
+=item yield
 
 =back
 
@@ -354,7 +374,10 @@ to forward stringification to their class-defined code.
 
 You might build a reusable block line the following calls:
 
-    block 'block_name' => sub { ... };
+    block 'block_name', sub { ... };
+    
+    # or:
+    block block_name => sub { ... };
     
     # or shorter:
     block block_name { ... };
@@ -368,6 +391,7 @@ the special sub C<block_content>. A simple example makes this clearer:
 
     # define a block:
     block infobox {
+        # attr() values may be read before the first opening tag
         my $headline = attr('headline') || 'untitled';
         my $id = attr('id');
         my $class = attr('class');
@@ -784,6 +808,10 @@ PERL
     return 1;
 
 }
+
+=head1 SEE ALSO
+
+L<Catalyst::View::ByCode::Manual>
 
 =head1 AUTHOR
 

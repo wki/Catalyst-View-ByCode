@@ -106,6 +106,19 @@ is($e->as_string, '<xxx style="z-index:1000"></xxx>', 'tag w/ mixedCase hashref-
 $e->delete_attr('style');
 
 #
+# check auto-expansion for checked, disabled and selected
+#
+my %value_for = (zero => 0, undef => undef, 'number:"1"' => 1, 'string:"abc"' => 'abc');
+foreach my $attr_name (qw(checked disabled multiple readonly selected)) {
+    while (my ($name, $value) = each(%value_for)) {
+        $e->set_attr($attr_name => $value);
+        my $attr = $value ? qq{ $attr_name="$attr_name"} : '';
+        is($e->as_string, "<xxx$attr></xxx>", "tag w/ $name $attr_name attr gets stringified OK");
+        $e->delete_attr($attr_name);
+    }
+}
+
+#
 # add some content
 #
 $e->set_attr(abc => '4<2');
@@ -113,5 +126,6 @@ my $c = new Catalyst::View::ByCode::Markup::Element(content => 'blabla');
 $e->content([$c]);
 is($e->as_string, '<xxx abc="4&#60;2">blabla</xxx>', 'tag w/ attr w/ content is OK');
 is("pp$e", 'pp<xxx abc="4&#60;2">blabla</xxx>', 'stringified tag w/ attr w/ content is OK');
+
 
 done_testing();

@@ -1,5 +1,13 @@
 Revision history for Catalyst-View-ByCode
 
+        2010-03-31
+        * added a handy shortcut for checked, disabled, multiple, readonly
+          and selected attributes rendering a true value to the 
+          attribute's name
+          eg: disabled => 1 will become disabled="disabled" in HTML
+        * added a params() sub that allows to specify a series of
+          param tags with one call.
+        
         2010-03-29
         * fixed a bug that made block-definitions defined in 'old-scholl'
           fashion unable to read attr()-values. Only declare-defined

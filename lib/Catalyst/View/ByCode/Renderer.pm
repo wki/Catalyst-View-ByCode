@@ -14,6 +14,7 @@ our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
 our @EXPORT     = qw(template block block_content
                      load
                      yield
+                     params
                      attr
                      class id on
                      stash c _
@@ -243,6 +244,21 @@ sub block($&;@) {
 #
 sub block_content() {
     $document->add_text($block_content->()) if ($block_content);
+}
+
+#
+# a simple shortcut for multiple param(name => ..., value => ...) sequences
+#
+sub params {
+    my %params = @_;
+    
+    while ((my $name, $value) = each %params) {
+        $document->add_tag(
+            'param', 
+            name => $name,
+            value => $value,
+        );
+    }
 }
 
 #
