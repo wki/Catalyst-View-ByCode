@@ -185,7 +185,7 @@ generates a E<lt>qE<gt> tag
 
 =item strike
 
-generates a E<lt>s<gt> tag
+generates a E<lt>sE<gt> tag
 
 =item map_tag
 
@@ -277,9 +277,14 @@ After a plus prefixed name all following names are added to the class list. A
 list of class names without a plus/minus prefix will start with an empty class
 list and then append all subsequentially following names.
 
-    div.foo { class 'abc def ghi' };           # will yield 'abc def ghi'
-    div.foo { class '+def xyz' };              # will yield 'foo def xyz'
-    div.foo { class '-foo +bar' };             # will yield 'bar'
+    # will yield 'abc def ghi'
+    div.foo { class 'abc def ghi' };
+    
+    # will yield 'foo def xyz'
+    div.foo { class '+def xyz' };
+    
+    # will yield 'bar'
+    div.foo { class '-foo +bar' };
 
 =item on handler => 'some javascript code'
 
