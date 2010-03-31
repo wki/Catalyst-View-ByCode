@@ -76,8 +76,8 @@ Catalyst::View::ByCode - Templating using pure Perl code
             body {
                 div header.noprint {
                     ul.topnav {
-                        li {'home'};
-                        li {'surprise'};
+                        li { 'home' };
+                        li { 'surprise' };
                     };
                 };
                 div content {
@@ -277,9 +277,9 @@ After a plus prefixed name all following names are added to the class list. A
 list of class names without a plus/minus prefix will start with an empty class
 list and then append all subsequentially following names.
 
-    div.foo { class 'abc def ghi' };             will yield 'abc def ghi'
-    div.foo { class '+def xyz' };                will yield 'foo def xyz'
-    div.foo { class '-foo +bar' };               will yield 'bar'
+    div.foo { class 'abc def ghi' };           # will yield 'abc def ghi'
+    div.foo { class '+def xyz' };              # will yield 'foo def xyz'
+    div.foo { class '-foo +bar' };             # will yield 'bar'
 
 =item on handler => 'some javascript code'
 
@@ -362,6 +362,8 @@ to forward stringification to their class-defined code.
 
 =item on
 
+=item params
+
 =item stash
 
 =item template
@@ -434,6 +436,129 @@ A simple configuration of a derived Controller could look like this:
         # all these modules are use()'d automatically
         include => [Some::Module Another::Package],
     );
+
+By default a typical standard configuration setting is constructed by issuing
+the Helper-Module. It looks like this and describes all default settings:
+
+    __PACKAGE__->config(
+        # # Change default
+        # extension => '.pl',
+        # 
+        # # Set the location for .pl files
+        # root_dir => 'root/bycode',
+        # 
+        # # This is your wrapper template located in the 'root_dir'
+        # wrapper => 'wrapper.pl',
+        #
+        # # specify packages to use in every template
+        # include => [ qw(My::Package::Name Other::Package::Name) ]
+    );
+
+The following configuration options are available:
+
+=over
+
+=item root_dir
+
+With this option you may define a location that is the base of all template
+files. By default, the directory F<root/bycode> inside your application will
+be used.
+
+=item extension
+
+This is the default file extension for template files. As an example, if your
+Controller class is named C<MyController> and your action method calls
+C<MyAction> then by default a template located at
+F<root_dir/mycontroller/myaction.pl> will get used to render your markup. The
+path and file name will get determined by concatenating the
+controller-namespace, the action namespace and the extension configuration
+directive.
+
+If you like to employ another template, you may specifiy a different path
+using the stash variable C<template>. See L<STASH VARIABLES> below.
+
+=item wrapper
+
+A wrapper is a template that is rendered before your main template and
+includes your main template at a given point. It "wraps" something around your
+template. This might be useful if you like to avoid repeating the standard
+page-setup code for every single page you like to generate.
+
+The default wrapper is named F<wrapper.pl> and is found directoy inside root_dir.
+
+See L<TRICKS/Using a wrapper> below.
+
+=item include
+
+As every template is a perl module, you might like to add other modules using
+Perl's C<use> directive. Well, you may do that at any point inside your
+template. However, if you repeatedly need the same modules, you could simply
+add them as a hashref using this configuration option.
+
+=back
+
+=head1 STASH VARIABLES
+
+The following stash variables are used by C<Catalyst::View::ByCode>:
+
+=over
+
+=item template
+
+If you like to override the default behavior, you can directly specify the
+template containing your rendering. Simply enter a relative path inside the
+root directory into this stash variable.
+
+If the template stash variable is left empty, the template used to render your
+markup will be determined by concatenating the action's namespace and the
+extension.
+
+=item wrapper
+
+Overriding the default wrapper is the job of this stash variable. Simply
+specify a relative path to a wrapping template into this stash variable.
+
+=item yield
+
+Yielding is a powerful mechanism. The C<yield> stash variable contains a
+hashref that contains a template or an array-ref of templates for certain
+keys. Every template might be a path name leading to a template or a code-ref
+able that should be executed as the rendering code.
+
+C<$c->stash->{yield}->{content}> is an entry that is present by default. It
+contains in execution order the wrapper and the template to get executed.
+
+Other keys may be defined and populated in a similar way in order to provide
+hooks to magic parts of your markup generation.
+
+See L<TRICKS/Setting hooks at various places> below.
+
+=back
+
+=head1 TRICKS
+
+=head2 Using a wrapper
+
+=head2 Setting hooks at various places
+
+=head2 Avoiding repetitions
+
+=head2 Including FormFu or FormHandler
+
+=head2 Create your own error page
+
+=head2 Shortcuts
+
+- TODO: input(disabled => 1) instead of input(disabled => 'disabled')
+
+- TODO: input(checked => 1) instead of input(disabled => 'checked')
+
+- TODO: option(selected => 1) instead of option(selected => 'selected')
+
+    some_tag.some_class {
+        class '+another_class';
+    }
+
 
 =head1 METHODS
 
@@ -808,10 +933,6 @@ PERL
     return 1;
 
 }
-
-=head1 SEE ALSO
-
-L<Catalyst::View::ByCode::Manual>
 
 =head1 AUTHOR
 
