@@ -252,13 +252,15 @@ sub block_content() {
 sub params {
     my %params = @_;
     
-    while ((my $name, $value) = each %params) {
+    while (my ($name, $value) = each %params) {
         $document->add_tag(
             'param', 
             name => $name,
             value => $value,
         );
     }
+    
+    return;
 }
 
 #

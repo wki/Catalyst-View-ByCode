@@ -1,3 +1,4 @@
+Catalyst-View-ByCode-0.09.tar.gz
 Changes
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
@@ -13,6 +14,7 @@ inc/Module/Install/WriteAll.pm
 lib/Catalyst/Helper/View/ByCode.pm
 lib/Catalyst/View/ByCode.pm
 lib/Catalyst/View/ByCode/Declare.pm
+lib/Catalyst/View/ByCode/Manual.pod
 lib/Catalyst/View/ByCode/Markup/Document.pm
 lib/Catalyst/View/ByCode/Markup/Element.pm
 lib/Catalyst/View/ByCode/Markup/EscapedText.pm
@@ -32,11 +34,14 @@ t/200-renderer.t
 t/210-renderer-markup.t
 t/300-view.t
 t/400-app.t
+t/900-bug_block.t
 t/lib/IncludeMe.pm
 t/lib/TestApp.pm
 t/lib/TestApp/View/ByCode.pm
 t/root/bycode/block_template.pl
+t/root/bycode/bug_block.pl
 t/root/bycode/erroneous_template.pl
 t/root/bycode/including_template.pl
 t/root/bycode/simple_template.pl
+t/root/bycode/wrap_template.pl
 TODO.txt

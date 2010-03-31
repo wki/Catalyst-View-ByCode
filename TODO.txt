@@ -2,7 +2,6 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
-   - what about a params() that allows easy key/value pairs for applet/object tags...
    - is there an easier way to create tables?
    - is there a way to iterate over lists creating repeating things easier?
       eg navigation entries as li-a, error-lists as li
@@ -10,7 +9,8 @@ Changes C::V::ByCode
       eg. Bold for *xxx* or wrapping www.xxx.tld with a link-tag?
 
    ### done 2010-03-31
-      - disabled|checked|selected => 1 as shortcut for x => 'x'
+   - disabled|checked|selected => 1 as shortcut for x => 'x'
+   - what about a params() that allows easy key/value pairs for applet/object tags...
 
    ### done 2010-03-01
    - find a way to add a Devel::Declare Handler if a 'block xxx' defined
