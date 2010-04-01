@@ -13,7 +13,7 @@ requires 'HTML::Tagset'             => '3.10';
 requires 'List::Util'               => '1.21';
 requires 'MIME::Base64'             => '3.07';
 requires 'Moose';
-requires 'MooseX::AttributeHelpers';
+requires 'MooseX::AttributeHelpers' => '0.23'; # 0.22 fails
 requires 'Test::Builder'            => '0.86';
 requires 'Test::Builder::Tester'    => '1.18';
 requires 'Test::Harness'            => '3.14';
