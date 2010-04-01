@@ -660,7 +660,7 @@ sub process {
     # beautify dies by replacing our strange file names
     # with the relative path of the wrapper or template
     #
-    local $SIG{__DIE__} = \&_handle_die;
+    local $SIG{__DIE__}  = \&_handle_die;
     local $SIG{__WARN__} = sub { _handle_warn($c->log, @_) };
     
     #

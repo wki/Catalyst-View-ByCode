@@ -3,6 +3,7 @@ Revision history for Catalyst-View-ByCode
         2010-04-01
         * bumped MooseX::AttributeHelpers to Version 0.23, as 0.22 fails
           Thanks, CPAN Testers!
+        * tried Dist::Zilla as a packaging system -- looks much easier to use.
         
         2010-03-31
         * added a handy shortcut for checked, disabled, multiple, readonly
