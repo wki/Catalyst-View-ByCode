@@ -4,6 +4,9 @@ Revision history for Catalyst-View-ByCode
         * bumped MooseX::AttributeHelpers to Version 0.23, as 0.22 fails
           Thanks, CPAN Testers!
         * tried Dist::Zilla as a packaging system -- looks much easier to use.
+        * split up the process() method into render() and delivery to allow
+          my $html = $c->forward('View::ByCode', render => [qw(list of files)]);
+          without pollution of stash.
         
         2010-03-31
         * added a handy shortcut for checked, disabled, multiple, readonly

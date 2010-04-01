@@ -4,7 +4,6 @@ use Test::Exception;
 
 #
 # can module get use'd ?
-#
 BEGIN { use_ok('Catalyst::View::ByCode::Renderer', ':default') };
 
 #
@@ -149,8 +148,11 @@ like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+bla="blubb"\s+
     }
 }
 
-sub c {
-    return X->new;
+{
+    no warnings 'redefine';
+    sub c {
+        return X->new;
+    }
 }
 
 my $concept = Y->new;
