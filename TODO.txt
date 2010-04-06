@@ -2,6 +2,8 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
+   - ->process(), ->render() -- create a test that verifies Actions with
+     or without :Args()
    - is there an easier way to create tables?
    - is there a way to iterate over lists creating repeating things easier?
       eg navigation entries as li-a, error-lists as li

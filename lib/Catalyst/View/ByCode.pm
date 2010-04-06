@@ -419,7 +419,8 @@ the same markup:
 a very simple way to generate a DOCTYPE declatation. Without any arguments, a
 HTML 4.0 doctype declaration will be generated. The arguments (if any) will
 consist of either of the words C<html> or C<xhtml> optionally followed by one
-or more version digits.
+or more version digits. The doctypes used are taken from
+L<http://hsivonen.iki.fi/doctype/>.
 
 some examples:
 
@@ -431,7 +432,7 @@ some examples:
     doctype 'html 4strict'; # HTML 4.01 strict
 
     doctype 'xhtml';        # XHTML 1.0
-    doctype 'xhtml 1 1';    # XHTML 1.0
+    doctype 'xhtml 1 1';    # XHTML 1.1
 
 =item id
 
@@ -760,7 +761,39 @@ with the wrapper template.
 
 =head2 Avoiding repetitions
 
-TODO: describe include directive
+Every template is a perl module. It resides in its own package and every thing
+you are not used to type is mangled into your source code before compilation.
+It is up to you to C<use> every other module you like. A simple module could
+look like this:
+
+    package MyMagicPackage;
+    use strict;
+    use warnings;
+    use base qw(Exporter);
+    
+    use Catalyst::View::ByCode::Renderer ':default';
+    
+    our @EXPORT = qw(my_sub);
+    
+    sub my_sub {
+        # do something...
+    }
+    
+    block my_block {
+        # do something else
+    };
+    
+    1;
+
+Using the Renderer class above gives your module everything a template has.
+You can use every Tag-sub you want.
+
+To use this module in every template you write within an application you
+simply populate the config of your View:
+
+    __PACKAGE__->config(
+        include => [ qw(MyMagicPackage) ]
+    );
 
 =head2 Including FormFu or FormHandler
 
@@ -953,7 +986,7 @@ sub process {
     my $self = shift;
     my $c = shift;
     
-    $c->response->body( $self->render($c, @_) );
+    $c->response->body( $self->render($c) );
     
     return 1; # indicate success
 }

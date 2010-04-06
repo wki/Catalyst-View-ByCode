@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+        2010-04-06
+         * changed parameters transfered from process() to render() as
+           actions with :Args() fail otherwise
+         * added a test for this.
+
 0.10    2010-04-01
         * bumped MooseX::AttributeHelpers to Version 0.23, as 0.22 fails
           Thanks, CPAN Testers!

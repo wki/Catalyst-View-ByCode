@@ -17,3 +17,5 @@ __PACKAGE__->config(
     # set at both places, app (which wins) and here:
     include => ['List::Util'],
 );
+
+1;
