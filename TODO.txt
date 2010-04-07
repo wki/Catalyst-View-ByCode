@@ -2,6 +2,10 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
+   - add a config directive (or more?) to add tags
+       block_tags => [qw(section paragraph)],
+       inline_tags => [qw(audio video)],
+       head_tags => [qw(foo bar)]
    - ->process(), ->render() -- create a test that verifies Actions with
      or without :Args()
    - is there an easier way to create tables?
