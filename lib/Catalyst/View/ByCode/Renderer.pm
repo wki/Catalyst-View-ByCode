@@ -347,7 +347,8 @@ sub yield(;*@) {
 
     _yield(exists($c->stash->{yield}->{$yield_name})
             ? $c->stash->{yield}->{$yield_name}
-            : $yield_name);
+            : $yield_name)
+        or $c->log->info("could not yield '$yield_name'");
 
     return;
 }
@@ -359,13 +360,16 @@ sub _yield {
     if (!$thing) {
         return;
     } elsif (ref($thing) eq 'ARRAY') {
+        my $result;
         while (my $x = shift(@{$thing})) {
-            _yield($x);
+            _yield($x) and $result = 1;
         }
+        return $result;
     } elsif (ref($thing) eq 'CODE') {
         $thing->();
+        return 1;
     } elsif (!ref($thing)) {
-        _yield($view->_compile_template($c, $thing));
+        return _yield($view->_compile_template($c, $thing));
     }
 }
 

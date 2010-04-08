@@ -6,13 +6,15 @@ Changes C::V::ByCode
        block_tags => [qw(section paragraph)],
        inline_tags => [qw(audio video)],
        head_tags => [qw(foo bar)]
-   - ->process(), ->render() -- create a test that verifies Actions with
-     or without :Args()
    - is there an easier way to create tables?
    - is there a way to iterate over lists creating repeating things easier?
       eg navigation entries as li-a, error-lists as li
    - is there a way to split text and handle the parts in a smart way?
       eg. Bold for *xxx* or wrapping www.xxx.tld with a link-tag?
+
+   ### done 2010-04-06
+   - ->process(), ->render() -- create a test that verifies Actions with
+     or without :Args()
 
    ### done 2010-03-31
    - disabled|checked|selected => 1 as shortcut for x => 'x'
