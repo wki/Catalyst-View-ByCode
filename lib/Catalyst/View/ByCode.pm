@@ -33,8 +33,6 @@ use UUID::Random;
 use Path::Class::File;
 use File::Spec;
 
-our $VERSION = '0.10';
-
 our $compiling_package; # local() ized during a compile
 
 =head1 NAME
