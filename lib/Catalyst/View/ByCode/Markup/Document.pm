@@ -51,11 +51,33 @@ sub close_tag {
     return;
 }
 
+
 sub add_tag {
     my $self = shift;
+    my $tag_name = shift; $tag_name = '' if (!defined($tag_name));
+    my $code = shift;
     
-    $self->open_tag(@_);
-    $self->close_tag;
+    my $tag_stack = $self->tag_stack;
+    
+    # HINT: methods versus some lines of inline code for speedup.
+    
+    # $self->open_tag($tag_name, @_);
+    my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
+    (scalar(@{$tag_stack}) ? $tag_stack->[-1] : $self)->add_content($e);
+    push @{$tag_stack}, $e;
+    
+    #$self->add_text($code->(@_)) if ($code);
+    if ($code) {
+        my $text = $code->(@_);
+        if (blessed($text) && $text->can('render')) {
+            $e->add_content( Catalyst::View::ByCode::Markup::Element->new(content => $text->render) );
+        } elsif (defined($text) && (ref($text) || $text ne '')) {
+            $e->add_content( Catalyst::View::ByCode::Markup::EscapedText->new(content => "$text") );
+        }
+    }
+    
+    # $self->close_tag;
+    pop @{$tag_stack};
     
     return;
 }
@@ -115,5 +137,6 @@ sub get_attr {
     return $self->current_tag->get_attr($attr_name);
 }
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

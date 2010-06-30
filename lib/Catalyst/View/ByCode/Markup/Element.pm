@@ -21,5 +21,6 @@ sub _html_escape {
     return $text;
 }
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

@@ -1,5 +1,8 @@
 Revision history for Catalyst-View-ByCode
 
+        2010-06-30
+        * changed some parts of markup generation to inline code for speedup
+
 0.11    2010-04-06
         * changed parameters transfered from process() to render() as
           actions with :Args() fail otherwise
@@ -10,6 +13,9 @@ Revision history for Catalyst-View-ByCode
 
         2010-04-15
         * $VERSION is now generated from Dist::Zilla 
+        
+        2010-05-27
+        * added a rudimentary html5 doctype
 
 0.10    2010-04-01
         * bumped MooseX::AttributeHelpers to Version 0.23, as 0.22 fails

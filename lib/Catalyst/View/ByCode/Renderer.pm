@@ -254,7 +254,8 @@ sub params {
     
     while (my ($name, $value) = each %params) {
         $document->add_tag(
-            'param', 
+            'param',
+            undef,
             name => $name,
             value => $value,
         );
@@ -286,6 +287,7 @@ sub load {
         foreach my $path (@_) {
             $document->add_tag(
                 'link',
+                undef,
                 rel  => 'stylesheet',
                 type => 'text/css',
                 href => $path,
@@ -298,6 +300,7 @@ sub load {
         foreach my $path (@_) {
             $document->add_tag(
                 'script',
+                undef,
                 type => 'text/javascript',
                 src  => $path,
             );
@@ -313,6 +316,7 @@ sub load {
         if ($kind eq 'Css') {
             $document->add_tag(
                 'link',
+                undef,
                 rel  => 'stylesheet',
                 type => 'text/css',
                 href => $c->uri_for($controller->action_for('default'), @_),
@@ -320,6 +324,7 @@ sub load {
         } else {
             $document->add_tag(
                 'script',
+                undef,
                 type => 'text/javascript',
                 src  => $c->uri_for($controller->action_for('default'), @_),
             );
@@ -467,6 +472,7 @@ sub doctype {
 
     my %doctype_for = (
         default      => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">},
+        html5        => q{<!DOCTYPE html>},
         html4        => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">},
         html4_strict => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" } .
                         q{"http://www.w3.org/TR/html4/strict.dtd">},
@@ -521,10 +527,29 @@ sub _construct_functions {
         no strict 'refs';
         *{"$namespace\::$sub_name"} = sub (;&@) {
             my $code = shift;
+            # $document->add_tag($tag_name, $code, @_); # inline version below:
             
-            $document->open_tag($tag_name, @_);
-            $document->add_text($code->(@_)) if ($code);
-            $document->close_tag($tag_name);
+            my $tag_stack = $document->tag_stack;
+            my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
+            (scalar(@{$tag_stack}) ? $tag_stack->[-1] : $document)->add_content($e);
+            push @{$tag_stack}, $e;
+
+            if ($code) {
+                my $text = $code->(@_);
+                if (!ref($text)) {
+                    if (defined($text) && $text ne '') {
+                        $text =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}oexmsg;
+                        $e->add_content( $text )
+                    }
+                } elsif (ref($text) && UNIVERSAL::can($text, 'render')) {
+                    $e->add_content( Catalyst::View::ByCode::Markup::Element->new(content => $text->render) );
+                } elsif (defined($text) && (ref($text) || $text ne '')) {
+                    $e->add_content( Catalyst::View::ByCode::Markup::EscapedText->new(content => "$text") );
+                }
+            }
+
+            pop @{$tag_stack};
+            return;
         };
         use strict 'refs';
         

@@ -6,13 +6,6 @@ use HTML::Tagset;
 
 extends 'Catalyst::View::ByCode::Markup::Structured';
 
-# subtype 'HashRefOfRef' => as 'HashRef[Ref]';
-# subtype 'HashRefOfIdent' => as 'HashRef[Str]'
-#     => where { !grep { !m{\A[a-zA-Z][a-zA-Z0-9-_]*\z}xms } keys %$_ };
-# coerce 'HashRefOfIdent'
-#     => from 'HashRefOfRef'
-#     => via { { map { "$_ " } %{$_} } };
-    
 has tag => (
     is => 'rw',
     isa => 'Str',
@@ -23,10 +16,7 @@ has tag => (
 has attr => (
     metaclass => 'Collection::Hash',
     is => 'rw',
-    #isa => 'HashRef[Str]',
     isa => 'HashRef',
-    # isa => 'HashRefOfIdent',
-    # coerce => 1,
     lazy => 1,
     default => sub { {} },
     provides => {
@@ -56,43 +46,6 @@ our %break_within =
 
 our $INDENT_STEP = 2;
 
-sub BUILD {
-    my $self = shift;
-    #_stringify_attr_values($self->attr);
-}
-
-#
-# helper: stringify a single attr value
-#
-sub _stringify_attr_value {
-    my $value = shift;
-    
-    if (!ref($value)) {
-        # do nothing
-    } elsif (ref($value) eq 'ARRAY') {
-        return join(' ', @{$value});
-    } elsif (ref($value) eq 'HASH') {
-        return join(';', map {"${\_key($_)}:$value->{$_}"} keys(%{$value}));
-    } else {
-        return "$value";
-    }
-    
-    return $value
-}
-
-#
-# helper: create a unified key for a string
-#         camelCase -> camel-case
-#         lower_case -> lower-case
-#
-sub _key {
-    my $key = shift;
-    
-    $key =~ s{([A-Z])|_}{-\l$1}xmsg;
-    
-    return $key;
-}
-
 #
 # rendering
 #
@@ -101,47 +54,77 @@ override as_string => sub {
     my $indent_level = shift || 0;
     my $need_break = shift;
     
+    # $need_break is a scalar-ref, therefore we need this ugly fallback
     my $dummy; $need_break ||= \$dummy;
     
-    # just content if no tag name given
-    return super() if (!$self->tag);
+    # define some shortcuts for faster access
+    my $tag  = $self->tag
+        # in case we do not have a tag
+        or return join('', map {ref($_) ? $_->as_string($indent_level+1, $need_break) : $_} @{$self->content});
+    my $attr = $self->attr;
     
     # wrap content into a tag
     my $result = '';
-    if ($break_before{$self->tag} && $$need_break) {
+    if ($break_before{$tag} && $$need_break) {
         $result .= "\n" . (' ' x ($INDENT_STEP * $indent_level));
     }
-    $result .= qq{<${\$self->tag}};
-    $result .= m{\A(?:disabled|checked|multiple|readonly|selected)\z}xms
-          # auto-expand attributes when true
-        ? ($self->attr->{$_} ? qq{ $_="$_"} : '')
-          # keep attributes as they are
-        : qq{ ${\_key($_)}="${\$self->_html_escape(_stringify_attr_value($self->attr->{$_}))}"}
-        for sort keys(%{$self->attr});
+    $result .= "<$tag";
+    
+    my $k;
+    my $v;
+    foreach $k (sort keys(%{$attr})) {
+        $v = $attr->{$k} // '';
+        
+        if ($k =~ m{\A(?:disabled|checked|multiple|readonly|selected)\z}oxms) {
+            # special handling for magic names that require magic values
+            $result .= qq{ $k="$k"} if ($v);
+        } elsif ($k =~ m{\A[a-z]+\z}o && !ref($v) && $v !~ m{[\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}]}o) {
+            # trivial case - no escaping needed
+            no warnings;
+            $result .= qq{ $k="$v"};
+        } else {
+            # escaping and special value handling needed
+            if (ref($v)) {
+                $v = ref($v) eq 'ARRAY' ? join(' ', @{$v})
+                   : ref($v) eq 'HASH'  ? join(';', map { my $k = $_; $k =~ s{([A-Z])|_}{-\l$1}oxmsg; "$k:$v->{$_}"} keys(%{$v}))
+                   : "$v";
+            }
+            $v =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}oexmsg;
+            
+            no warnings; # perl5.12 warns anyway... strange.
+            
+            # convert key into unified version. see _key above
+            $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
+            
+            # compose
+            $result .= qq{ $k="$v"};
+        }
+    }
     
     # distinguish between empty tags and content-containing ones...
-    if (!exists($HTML::Tagset::emptyElement{$self->tag})) {
+    if (!exists($HTML::Tagset::emptyElement{$tag})) {
         # content containg tag
         $result .= '>';
-        if ($break_within{$self->tag}) {
+        if ($break_within{$tag}) {
             $result .= "\n" . (' ' x ($INDENT_STEP * ($indent_level+1)));
             $$need_break = 0;
         }
-        $result .= super();
-        if ($break_within{$self->tag}) {
+        $result .= join('', map {ref($_) ? $_->as_string($indent_level+1, $need_break) : $_} @{$self->content});
+        if ($break_within{$tag}) {
             $result .= "\n" . (' ' x ($INDENT_STEP * $indent_level));
         }
-        $result .= qq{</${\$self->tag}>};
+        $result .= "</$tag>";
     } else {
         $result .= ' />';
     }
     
     # just remember break_after as it should indent less sometimes, 
     # we cannot decide this here and now
-    $$need_break = 1 if ($break_after{$self->tag});
+    $$need_break = 1 if ($break_after{$tag});
     
     return $result;
 };
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;
