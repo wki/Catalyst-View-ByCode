@@ -4,6 +4,7 @@ use MooseX::AttributeHelpers;
 use Catalyst::View::ByCode::Markup::Element;
 use Catalyst::View::ByCode::Markup::EscapedText;
 use Catalyst::View::ByCode::Markup::Tag;
+
 extends 'Catalyst::View::ByCode::Markup::Structured';
 
 has tag_stack => (
@@ -13,9 +14,9 @@ has tag_stack => (
     lazy => 1,
     default => sub { [] },
     provides => {
-        push => 'add_open_tag',
-        pop => 'remove_open_tag',
-        last => 'current_tag',
+        push  => 'add_open_tag',
+        pop   => 'remove_open_tag',
+        last  => 'current_tag',
         empty => 'has_opened_tag',
     },
 );
@@ -30,8 +31,7 @@ override as_string => sub {
 
 sub open_tag {
     my $self = shift;
-    my $tag_name = shift;
-    $tag_name = '' if (!defined($tag_name));
+    my $tag_name = shift || ''; #$tag_name = '' if (!defined($tag_name));
     
     my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
  
@@ -42,12 +42,7 @@ sub open_tag {
 }
 
 sub close_tag {
-    my $self = shift;
-    
-    die 'no tag open' if (!$self->has_opened_tag);
-    
-    $self->remove_open_tag;
-    
+    $_[0]->remove_open_tag;
     return;
 }
 
@@ -64,31 +59,31 @@ sub add_tag {
     # $self->open_tag($tag_name, @_);
     my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
     (scalar(@{$tag_stack}) ? $tag_stack->[-1] : $self)->add_content($e);
-    push @{$tag_stack}, $e;
     
-    #$self->add_text($code->(@_)) if ($code);
     if ($code) {
+        push @{$tag_stack}, $e;
         my $text = $code->(@_);
         if (blessed($text) && $text->can('render')) {
             $e->add_content( Catalyst::View::ByCode::Markup::Element->new(content => $text->render) );
         } elsif (defined($text) && (ref($text) || $text ne '')) {
             $e->add_content( Catalyst::View::ByCode::Markup::EscapedText->new(content => "$text") );
         }
+        pop @{$tag_stack};
     }
-    
-    # $self->close_tag;
-    pop @{$tag_stack};
     
     return;
 }
 
 sub append {
-    my $self = shift;
-    my $content = shift;
-
-    ($self->has_opened_tag ? $self->current_tag : $self)->add_content($content);
-    
+    ($_[0]->has_opened_tag ? $_[0]->current_tag : $_[0])->add_content($_[1]);
     return;
+    
+    # my $self = shift;
+    # my $content = shift;
+    # 
+    # ($self->has_opened_tag ? $self->current_tag : $self)->add_content($content);
+    # 
+    # return;
 }
 
 sub add_text {
@@ -117,24 +112,12 @@ sub add_text {
 }
 
 sub set_attr {
-    my $self = shift;
-    
-    die 'no tag open' if (!$self->has_opened_tag);
-    die 'no attr given' if (!scalar(@_));
-    
-    $self->current_tag->set_attr(@_);
-    
+    $_[0]->current_tag->set_attr(@_[1..$#_]);
     return;
 }
 
 sub get_attr {
-    my $self = shift;
-    my $attr_name = shift;
-    
-    die 'no tag open' if (!$self->has_opened_tag);
-    die 'no attr-name given' if (!$attr_name);
-    
-    return $self->current_tag->get_attr($attr_name);
+    return $_[0]->current_tag->get_attr($_[1]);
 }
 
 __PACKAGE__->meta->make_immutable;

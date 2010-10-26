@@ -391,7 +391,8 @@ sub attr {
 # set a class inside a tag
 #
 sub class {
-    my @args = @_;
+    my @args = @_
+        or return;
     
     #
     # class 'huhu';              - set 'huhu' (replacing previous name)
@@ -413,7 +414,7 @@ sub class {
     }
     
     my $operation = 0; # -1 = sub, 0 = set, +1 = add
-    foreach my $name (grep {$_} map {split qr{\s+}xms} @args) {
+    foreach my $name (grep {length} map {split qr{\s+}xms} grep {!ref && defined && length} @args) {
         if ($name =~ s{\A([-+])}{}xms) {
             $operation = $1 eq '-' ? -1 : +1;
         }
@@ -532,9 +533,9 @@ sub _construct_functions {
             my $tag_stack = $document->tag_stack;
             my $e = new Catalyst::View::ByCode::Markup::Tag(tag => $tag_name, attr => {@_});
             (scalar(@{$tag_stack}) ? $tag_stack->[-1] : $document)->add_content($e);
-            push @{$tag_stack}, $e;
 
             if ($code) {
+                push @{$tag_stack}, $e;
                 my $text = $code->(@_);
                 if (!ref($text)) {
                     if (defined($text) && $text ne '') {
@@ -543,12 +544,12 @@ sub _construct_functions {
                     }
                 } elsif (ref($text) && UNIVERSAL::can($text, 'render')) {
                     $e->add_content( Catalyst::View::ByCode::Markup::Element->new(content => $text->render) );
-                } elsif (defined($text) && (ref($text) || $text ne '')) {
+                } else { #if (defined($text) && (ref($text) || $text ne '')) {
                     $e->add_content( Catalyst::View::ByCode::Markup::EscapedText->new(content => "$text") );
                 }
+                pop @{$tag_stack};
             }
 
-            pop @{$tag_stack};
             return;
         };
         use strict 'refs';
