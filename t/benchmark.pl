@@ -17,9 +17,24 @@ use Benchmark ':all';
             tbody {
                 for my $row (1..1000) {
                     trow {
+                        class '+even' if ($row %2);
+                        
                         for my $col (1..10) {
-                            tcol { "$row:$col" };
+                            tcol {
+                                class '+firstcol' if ($col == 1);
+                                class '+lastcol'  if ($col == 10);
+                                
+                                "$row:$col"
+                            };
                         }
+                        
+                        tcol {
+                            join('', (0 .. 9));
+                        };
+                        
+                        tcol {
+                            $row % 2 ? 'odd' : 'even';
+                        };
                     };
                 }
             };
@@ -37,10 +52,16 @@ use Benchmark ':all';
         <table>
             <tbody>
                 [% FOREACH row IN [1..1000] %]
-                <tr>
+                <tr[% IF row % 2 %] class="even"[% END %]>
                     [% FOREACH col IN [1..10] %]
-                    <td>[% row %]:[% col %]</td>
+                    <td[% IF col == 1 %] class="firstcol"[% ELSIF col == 10 %] class="lastcol"[% END %]>[% row %]:[% col %]</td>
                     [% END %]
+                    <td>
+                        [% FOR i IN [0..9] %][% i %][% END %]
+                    </td>
+                    <td>
+                        [% IF row % 2 %]odd[% ELSE %]even[% END %]
+                    </td>
                 </tr>
                 [% END %]
             </tbody>
@@ -56,11 +77,12 @@ use Benchmark ':all';
 
 # print TTTemplate::exec(); exit;
 
-# init_markup();
-# MyTemplate::exec();
+# init_markup(); ByCodeTemplate::exec(); print get_markup(); exit;
 
-my $results = timethese(10, {
+#
+# run the simple benchmark
+#
+cmpthese timethese 20, {
     bycode => sub { init_markup(); ByCodeTemplate::exec(); },
     tt     => sub { TTTemplate::exec(); },
-});
-cmpthese($results);
+};
