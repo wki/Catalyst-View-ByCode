@@ -26,7 +26,7 @@ isa_ok($view, 'Catalyst::View::ByCode', 'view class looks good');
 # check default attributes
 is($view->extension, '.pl', 'extension looks good');
 is($view->root_dir,  'root/bycode', 'root_dir looks good');
-is($view->wrapper,   'wrapper.pl', 'extension looks good');
+is($view->wrapper,   'wrapper.pl', 'wrapper looks good');
 is_deeply($view->include,   [], 'includes look good');
 
 #

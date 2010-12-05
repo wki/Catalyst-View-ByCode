@@ -37,6 +37,11 @@ our $view;          # ByCode View instance
 our $block_content; # code for executing &content()
 
 #
+# some constants
+#
+our $NEED_ESCAPE = qr{[\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}]};
+
+#
 # some tags get changed by simply renaming them
 #
 #                   'html tag'  'sub name'
@@ -150,7 +155,7 @@ sub TIEHANDLE {
     my $class  = shift; # my class (Catalyst::View::ByCode::Renderer)
     my $handle = shift; # escaping on or off -- use this scalar as a handle
                         # and its value to decide escaping
-                        # -- see PRINT/PRINTF below
+                        # -- see PRINT below
     
     return bless \$handle, $class;
 }
@@ -164,9 +169,10 @@ sub PRINT {
              ? $_->render()
              : $$handle
                  ? do { my $text = "$_"; 
-                        $text =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}oexmsg;
-                        $text }
-                 : "$_" }
+                        $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
+                        $text; }
+                 : "$_" 
+         }
          @_;
     return;
 }
@@ -186,14 +192,12 @@ sub clear_markup {
 }
 
 sub init_markup {
-    my $view_object = shift;
-    my $context = shift;
-    
     clear_markup();
-    $c = $context;
-    $view = $view_object;
-    $stash = $context && $context->can('stash')
-        ? $context->stash
+    
+    $view  = shift;
+    $c     = shift;
+    $stash = $c && $c->can('stash')
+        ? $c->stash
         : {}; # primitive fallback
 }
 
@@ -207,52 +211,57 @@ sub _render {
                ? do {
                    my $attr = $_->[1];
                    $_->[0]
+                       # tag structure is named => <tag ...>
                      ? "<$_->[0]" .
+                       # render attribute(s)
                        join('', 
                             map {
-                                # OLD primitive version: qq{ $_="$attr->{$_}"}
-                                
                                 my $k = $_;
                                 my $v = $attr->{$k} // '';
                                 
-                                if ($k =~ m{\A(?:disabled|checked|multiple|readonly|selected)\z}oxms) {
+                                if ($k eq 'disabled' || 
+                                    $k eq 'checked' || 
+                                    $k eq 'multiple' || 
+                                    $k eq 'readonly' || 
+                                    $k eq 'selected') {
                                     # special handling for magic names that require magic values
                                     $v ? qq{ $k="$k"} : '';
-                                } elsif ($k =~ m{\A[a-z]+\z}o && 
-                                         !ref($v) && 
-                                         $v !~ m{[\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}]}o) {
-                                    # trivial case - no escaping needed
-                                    # no warnings;
-                                    qq{ $k="$v"};
                                 } else {
-                                    # escaping and special value handling needed
-                                    if (ref($v)) {
+                                    # not a special attribute name
+                                    if (ref $v) {
+                                        # handle ref values differently
                                         $v = ref($v) eq 'ARRAY' 
                                              ? join(' ', @{$v})
                                            : ref($v) eq 'HASH'  
                                              ? join(';', 
-                                                    map { my $k = $_; $k =~ s{([A-Z])|_}{-\l$1}oxmsg; "$k:$v->{$_}"}
-                                                    keys(%{$v}))
+                                                    map { my $k = $_; 
+                                                          $k =~ s{([A-Z])|_}{-\l$1}oxmsg; 
+                                                          "$k:$v->{$_}" }
+                                                    keys %{$v})
                                            : "$v";
                                     }
-                                    $v =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}oexmsg;
+                                    $v =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                                     
-                                    no warnings; # perl5.12 warns anyway... strange.
+                                    no warnings; # $1 might be undef, perl5.12 warns anyway... strange.
                                     
-                                    # convert key into unified version. see _key above
+                                    # convert key into unified version.
                                     $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
                                     
-                                    # compose
+                                    # compose attr="value"
                                     qq{ $k="$v"};
                                 }
                             }
-                            sort 
-                            keys(%{$attr})) .
+                            sort # not needed but nice for testing/guessing
+                            keys %{$attr}
+                       ) .
+                       
+                       # closing tag or content?
                        (exists($HTML::Tagset::emptyElement{$_->[0]})
                           ? ' />'
                           : '>' . 
                             _render(@{$_}[2 .. $#$_]) .
                             "</$_->[0]>")
+                       # tag is unnamed -- just render content
                      : _render(@{$_}[2 .. $#$_])
                  }
                  
@@ -262,7 +271,7 @@ sub _render {
 }
 
 sub markup_object {
-    die 'this function has been removed in FastRenderer';
+    die 'this function does not make sense in FastRenderer';
 }
 
 ######################################## EXPORTED FUNCTIONS
@@ -448,6 +457,8 @@ sub _yield {
 # get/set attribute(s) of latest open tag
 #
 sub attr {
+    return $top[-1]->[1]->{$_[0]}) if (scalar(@_) == 1);
+    
     %{ $top[-1]->[1] } = ( %{ $top[-1]->[1] }, @_ );
     return;
 }
@@ -598,7 +609,8 @@ sub _construct_functions {
                     $text = $text->render;
                 }
                 if (defined($text) && $text ne '') {
-                    $text =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf('&#%d;', ord($1))}oexmsg;
+                    $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
+                    
                     push @{$top[-1]}, $text;
                 }
                 pop @top;

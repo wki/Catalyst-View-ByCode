@@ -4,12 +4,11 @@ use strict;
 use warnings;
 use lib '/Users/wolfgang/proj/Catalyst-View-ByCode/lib';
 use Benchmark qw(:all);
-use IO::String;
-use YAML;
+#use YAML;
 
 
-do { my $x = "<sdf<<<<"; $x =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf("&#%d;", ord($1))}oexmsg; } for (1 .. 100_000);
-exit;
+#do { my $x = "<sdf<<<<"; $x =~ s{([\"<>&\x{0000}-\x{001f}\x{007f}-\x{ffff}])}{sprintf("&#%d;", ord($1))}oexmsg; } for (1 .. 100_000);
+#exit;
 
 
 print "Perl $]\n\n";

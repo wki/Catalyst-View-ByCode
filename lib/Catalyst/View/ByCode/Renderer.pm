@@ -98,7 +98,7 @@ sub import {
     if ($default_export || !scalar(@_)) {
         tie *{"$calling_package\::OUT"}, $module, 1; # escaped:   OUT
         tie *{"$calling_package\::RAW"}, $module, 0; # unescaped: RAW
-        tie *{"$calling_package\::STDOUT"}, $module, 1; # escaped: STDOUT
+        #tie *{"$calling_package\::STDOUT"}, $module, 1; # escaped: STDOUT
 
         # stupid hack to make -w happy ;-)
         my $dummy0 = *{"$calling_package\::OUT"};
