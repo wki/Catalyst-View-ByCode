@@ -601,7 +601,6 @@ sub _construct_functions {
             
             if ($_[0]) {
                 push @top, $top[-1]->[-1];
-                # push @{$top[-1]}, $_[0]->() // (); ### too simple and not escaped
                 
                 my $text = $_[0]->(@_);
                 if (ref($text) && UNIVERSAL::can($text, 'render')) {
