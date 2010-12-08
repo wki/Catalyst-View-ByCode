@@ -17,7 +17,6 @@ can_ok('main', qw(template block block_content
 ok(!main->can('clear_markup'),  'clear_markup not exported');
 ok(!main->can('init_markup'),   'init_markup not exported');
 ok(!main->can('get_markup'),    'get_markup not exported');
-ok(!main->can('markup_object'), 'markup_object not exported');
 
 #
 # clear markup
