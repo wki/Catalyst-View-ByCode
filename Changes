@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+0.12    2010-12-08
+        * complete rewrite of the whole rendering code
+          using simple structures instead of Moose for performance
+          changed speed for readability
+
         2010-06-30
         * changed some parts of markup generation to inline code for speedup
 
