@@ -242,9 +242,8 @@ sub _render {
                                     }
                                     $v =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                                     
-                                    no warnings; # $1 might be undef, perl5.12 warns anyway... strange.
-                                    
                                     # convert key into unified version.
+                                    no warnings; # $1 might be undef, perl5.12 warns anyway... strange.
                                     $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
                                     
                                     # compose attr="value"
@@ -457,7 +456,7 @@ sub _yield {
 # get/set attribute(s) of latest open tag
 #
 sub attr {
-    return $top[-1]->[1]->{$_[0]}) if (scalar(@_) == 1);
+    return $top[-1]->[1]->{$_[0]} if (scalar(@_) == 1);
     
     %{ $top[-1]->[1] } = ( %{ $top[-1]->[1] }, @_ );
     return;
