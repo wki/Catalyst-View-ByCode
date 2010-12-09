@@ -604,9 +604,8 @@ sub _construct_functions {
                 
                 my $text = $_[0]->(@_);
                 if (ref($text) && UNIVERSAL::can($text, 'render')) {
-                    $text = $text->render;
-                }
-                if (defined($text) && $text ne '') {
+                    push @{$top[-1]}, $text->render;
+                } elsif (defined($text) && $text ne '') {
                     $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                     
                     push @{$top[-1]}, $text;
