@@ -209,11 +209,11 @@ sub _render {
     join ('',
          map {
              ref($_) eq 'ARRAY'
-                 # a Tag is [ 'tag', {attrs}, content, ... ]
+               # a Tag is [ 'tag', {attrs}, content, ... ]
                ? do {
                    my $attr = $_->[1];
                    $_->[0]
-                       # tag structure is named => <tag ...>
+                     # tag structure is named => <tag ...>
                      ? "<$_->[0]" .
                        # render attribute(s)
                        join('', 
@@ -244,8 +244,8 @@ sub _render {
                                     }
                                     $v =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                                     
-                                    # convert key into unified version.
-                                    no warnings; # $1 might be undef, perl5.12 warns anyway... strange.
+                                    # convert key into dash-separaed version,
+                                    # dataId -> data-id, data_id => data-id
                                     $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
                                     
                                     # compose attr="value"
@@ -262,11 +262,12 @@ sub _render {
                           : '>' . 
                             _render(@{$_}[2 .. $#$_]) .
                             "</$_->[0]>")
-                       # tag is unnamed -- just render content
+                     
+                     # tag is unnamed -- just render content
                      : _render(@{$_}[2 .. $#$_])
                  }
-                 
-                 # everything else is stringified
+               
+               # everything else is stringified
                : "$_"
          } @_);
 }
@@ -528,6 +529,8 @@ sub doctype {
 
     # see http://hsivonen.iki.fi/doctype/ for details on these...
     my @doctype_finder = (
+        [qr(html(?:\W*5)                  => 'html5'],
+
         [qr(html(?:\W*4[0-9.]*)?\W*s)     => 'html4_strict'],
         [qr(html(?:\W*4[0-9.]*)?\W*[tl])  => 'html4_loose'],
         [qr(html)                         => 'html4'],
@@ -573,7 +576,7 @@ sub doctype {
 #
 {
 no warnings 'redefine';
-sub _ { return $c->localize(@_); }
+sub _ { return $c->localize(@_) }
 }
 
 sub nbsp { "\x{00a0}" } # bad hack in the moment...
@@ -583,17 +586,17 @@ sub nbsp { "\x{00a0}" } # bad hack in the moment...
 #
 sub _construct_functions {
     my $namespace  = shift;
-
-    no warnings 'redefine';
-
+    
+    no warnings 'redefine'; # in case of a re-compile.
+    
     my %declare;
-
+    
     # tags with content are treated the same as tags without content
     foreach my $tag_name (grep { m{\A \w}xms }
                           keys(%HTML::Tagset::isKnown)) {
         my $sub_name = $change_tags{$tag_name}
             || $tag_name;
-
+        
         # install a tag-named sub in caller's namespace
         no strict 'refs';
         *{"$namespace\::$sub_name"} = sub (;&@) {
@@ -605,11 +608,12 @@ sub _construct_functions {
                 my $text = $_[0]->(@_);
                 if (ref($text) && UNIVERSAL::can($text, 'render')) {
                     push @{$top[-1]}, $text->render;
-                } elsif (defined($text) && $text ne '') {
+                } else {
+                    no warnings 'uninitialized'; # we might see undef values
                     $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
-                    
                     push @{$top[-1]}, $text;
                 }
+                
                 pop @top;
             }
             return;
@@ -621,7 +625,7 @@ sub _construct_functions {
             const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
-
+    
     # add logic for block definitions
     $declare{block} = {
         const => Catalyst::View::ByCode::Declare::block_parser

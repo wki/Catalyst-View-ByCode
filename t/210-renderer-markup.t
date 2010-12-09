@@ -176,5 +176,23 @@ like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<a
                                                             \s+title="Details">
                                                             \s*xxx\s*</a>\s*}xms, 'markup11 looks OK');
 
+# content objects that can render() themselves
+my $o = RenderMe->new();
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 12 lives';
+is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup 12 is empty');
+lives_ok { div(foo => 'bar') { $o } } 'adding an object markup lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+foo="bar">
+                                                              <hello>"world"</hello>
+                                                        \s*</div>}xms, 'markup 12 looks good');
+
 
 done_testing();
+
+# helper class for render test
+{
+    package RenderMe;
+    
+    sub new { bless {}, $_[0] }
+    
+    sub render { '<hello>"world"</hello>' };
+}

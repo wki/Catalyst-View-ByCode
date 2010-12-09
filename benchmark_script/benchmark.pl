@@ -54,10 +54,10 @@ use Benchmark ':all';
                 [% FOREACH row IN [1..1000] %]
                 <tr[% IF row % 2 %] class="even"[% END %]>
                     [% FOREACH col IN [1..10] %]
-                    <td[% IF col == 1 %] class="firstcol"[% ELSIF col == 10 %] class="lastcol"[% END %]>[% row %]:[% col %]</td>
+                    <td[% IF col == 1 %] class="firstcol"[% ELSIF col == 10 %] class="lastcol"[% END %]>[% row | html %]:[% col | html %]</td>
                     [% END %]
                     <td>
-                        [% FOR i IN [0..9] %][% i %][% END %]
+                        [% FOR i IN [0..9] %][% i | html %][% END %]
                     </td>
                     <td>
                         [% IF row % 2 %]odd[% ELSE %]even[% END %]
@@ -82,7 +82,7 @@ use Benchmark ':all';
 #
 # run the simple benchmark
 #
-cmpthese timethese 20, {
+cmpthese timethese 100, {
     bycode => sub { init_markup(); ByCodeTemplate::exec(); },
     tt     => sub { TTTemplate::exec(); },
 };

@@ -2,54 +2,11 @@ Changes C::V::ByCode
 --------------------
 
 0) BUGS/CHANGES:
-   - add a config directive (or more?) to add tags
-       block_tags => [qw(section paragraph)],
-       inline_tags => [qw(audio video)],
-       head_tags => [qw(foo bar)]
    - is there an easier way to create tables?
    - is there a way to iterate over lists creating repeating things easier?
       eg navigation entries as li-a, error-lists as li
    - is there a way to split text and handle the parts in a smart way?
       eg. Bold for *xxx* or wrapping www.xxx.tld with a link-tag?
-
-   ### done 2010-04-06
-   - ->process(), ->render() -- create a test that verifies Actions with
-     or without :Args()
-
-   ### done 2010-03-31
-   - disabled|checked|selected => 1 as shortcut for x => 'x'
-   - what about a params() that allows easy key/value pairs for applet/object tags...
-
-   ### done 2010-03-01
-   - find a way to add a Devel::Declare Handler if a 'block xxx' defined
-     sub is imported into another template.
-     
-     ==> @exporting_package::EXPORT_BLOCK -- contains a list of all blocks defined
-     ==> &C::V::B::Renderer::_export_blocks() does the job.
-     
-   ### fixed
-   - a(href => c->uri_for_action('concept/detail', $concept->ola_concept_id), title => 'Details', class => 'ajax', 'data-target' => '-new', 'data-title' => 'Detail') {
-     works
-   
-   ### fixed
-   - a(href => c->uri_for_action('concept/detail', $concept->ola_concept_id), 
-       title => 'Details', 
-       class => 'ajax', 
-       'data-target' => '-new', 
-       'data-title' => 'Detail')
-     omits everything after href...
-   
-   ### done 2010-02-23
-   - how would
-       a(data_target => '-new' , ...)
-       a(dataTarget => '-new' , ...)
-       a(style => {zIndex => 999})
-     look like???
-   
-   - div { class => '+some_class' }; # add a class name
-     div { class => '-some_class' }; # remove a class name
-     div { class => ' -some_class' }; # replace class name (BAD BUT FUNCTIONAL)
-
 
 1) IDEA: how to build extensible things
 
