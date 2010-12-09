@@ -9,7 +9,7 @@ use Scalar::Util 'blessed';
 use HTML::Tagset;
 # use HTML::Entities; ### TODO: think about -- but pollutes our namespaces
 
-our @EXPORT_OK  = qw(clear_markup init_markup get_markup markup_object);
+our @EXPORT_OK  = qw(clear_markup init_markup get_markup);
 
 our @EXPORT     = qw(template block block_content
                      load
