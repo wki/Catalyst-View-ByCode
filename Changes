@@ -3,14 +3,14 @@ Revision history for Catalyst-View-ByCode
         2011-01-02
         * added HTML5 as doctype
         * changed AutoPrereqs in dist.ini to avoid deprecacy warning
+        
+        2011-01-20
+        * allowed block_content() to forward arguments into the code-block called.
 
 0.14    2010-12-09
         * fixed a false escaping of render()'ed content from eg. FormFu
         * removed some typos
         * added more tests
-        
-        2011-01-20
-        * allowed block_content() to forward arguments into the code-block called.
         
 0.13    2010-12-09
         * increased version number due to a CPAN upload problem
