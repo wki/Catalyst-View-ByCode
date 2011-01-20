@@ -321,8 +321,8 @@ sub block($&;@) {
 #
 # execute a block's content
 #
-sub block_content() {
-    push @{$top[-1]}, $block_content->() if ($block_content);
+sub block_content {
+    push @{$top[-1]}, $block_content->(@_) if ($block_content);
     return;
 }
 
@@ -529,7 +529,7 @@ sub doctype {
 
     # see http://hsivonen.iki.fi/doctype/ for details on these...
     my @doctype_finder = (
-        [qr(html(?:\W*5)                  => 'html5'],
+        [qr(html(?:\W*5))                 => 'html5'],
 
         [qr(html(?:\W*4[0-9.]*)?\W*s)     => 'html4_strict'],
         [qr(html(?:\W*4[0-9.]*)?\W*[tl])  => 'html4_loose'],
@@ -604,6 +604,8 @@ sub _construct_functions {
             
             if ($_[0]) {
                 push @top, $top[-1]->[-1];
+                
+                #### TODO: find out why ->render does not work for HTML::FormFu !!!
                 
                 my $text = $_[0]->(@_);
                 if (ref($text) && UNIVERSAL::can($text, 'render')) {
