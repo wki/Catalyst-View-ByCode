@@ -279,8 +279,27 @@ sub _render {
 sub template(&) {
     my $package = caller;
     
+    my $code = shift;
     no strict 'refs';
-    *{"$package\::RUN"} = $_[0];
+    *{"$package\::RUN"} = sub {
+        push @{$top[-1]}, [ '', {} ];
+        
+        push @top, $top[-1]->[-1];
+        
+        my $text = $code->();
+        if (ref($text) && UNIVERSAL::can($text, 'render')) {
+            push @{$top[-1]}, $text->render;
+        } else {
+            no warnings 'uninitialized'; # we might see undef values
+            $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
+            push @{$top[-1]}, $text;
+        }
+        
+        pop @top;
+        return;
+    };
+    
+    return;
 }
 
 #

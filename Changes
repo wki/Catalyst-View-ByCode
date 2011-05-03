@@ -1,5 +1,9 @@
 Revision history for Catalyst-View-ByCode
 
+        2011-05-03
+        * enabled objects that have a ->render() method to appear inside
+          a template {} code block.
+
 0.15    2011-05-03
         * made doctype 'html' act as expected: <!doctype html>
         * changed doctype 'html' as the default if no argument is given
