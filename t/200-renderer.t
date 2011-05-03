@@ -13,7 +13,7 @@ BEGIN { use_ok('Catalyst::View::ByCode::Renderer', ':markup') };
 can_ok('Catalyst::View::ByCode::Renderer', qw(clear_markup init_markup get_markup));
 can_ok('Catalyst::View::ByCode::Renderer', qw(template block block_content
                                               load yield attr class id on
-                                              stash c doctype)); ### FIXME: _ fails
+                                              stash c doctype boilerplate)); ### FIXME: _ fails
 can_ok('main', qw(clear_markup init_markup get_markup));
 
 #
@@ -66,6 +66,7 @@ is(get_markup(), 'foo<div style="float:right">abc</div>bar', 'concatenating a ta
 @Catalyst::View::ByCode::Renderer::m = ( 'foo', [ 'div', {data => [1,2,3]}, 'a', 'b', 'c' ], 'bar' );
 is(get_markup(), 'foo<div data="1 2 3">abc</div>bar', 'concatenating a tag w/ arrayref attribute value works');
 
+
 #
 # print functionality
 #
@@ -86,6 +87,7 @@ is(get_markup(), qq{foo<div data="1 2 3">abc&"\x{0444}</div>bar}, 'append nested
 clear_markup();
 lives_ok { Catalyst::View::ByCode::Renderer::PRINT(\1, "abc<>\x{0123}") } 'PRINT escaped lives';
 is(get_markup(), "abc&#60;&#62;&#291;", 'escaped markup looks good');
+
 
 #
 # render() logic in PRINT

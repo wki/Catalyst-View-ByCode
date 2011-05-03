@@ -18,7 +18,7 @@ our @EXPORT     = qw(template block block_content
                      attr
                      class id on
                      stash c _
-                     doctype
+                     doctype boilerplate
                      nbsp
                     );
 our %EXPORT_TAGS = (
@@ -530,10 +530,10 @@ sub doctype {
     # see http://hsivonen.iki.fi/doctype/ for details on these...
     my @doctype_finder = (
         [qr(html(?:\W*5))                 => 'html5'],
+        [qr(html)                         => 'html5'],
 
         [qr(html(?:\W*4[0-9.]*)?\W*s)     => 'html4_strict'],
         [qr(html(?:\W*4[0-9.]*)?\W*[tl])  => 'html4_loose'],
-        [qr(html)                         => 'html4'],
 
         [qr(xhtml\W*1\W*1)                => 'xhtml1_1'],
         [qr(xhtml(?:\W*1[0-9.]*)?\W*s)    => 'xhtml1_strict'],
@@ -542,7 +542,7 @@ sub doctype {
     );
 
     my %doctype_for = (
-        default      => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">},
+        default      => q{<!DOCTYPE html>},
         html5        => q{<!DOCTYPE html>},
         html4        => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">},
         html4_strict => q{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" } .
@@ -568,6 +568,19 @@ sub doctype {
     }
     
     push @{$top[-1]}, $doctype_for{$doctype};
+}
+
+sub boilerplate(;&) {
+    push @{$top[-1]}, <<HTML;
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+HTML
+
+    $_[0]->() if ($_[0]);
+    
+    push @{$top[-1]}, '</html>';
 }
 
 ######################################## Locale stuff

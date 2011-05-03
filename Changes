@@ -1,5 +1,12 @@
 Revision history for Catalyst-View-ByCode
 
+0.15    2011-05-03
+        * made doctype 'html' act as expected: <!doctype html>
+        * changed doctype 'html' as the default if no argument is given
+        * added a 'boilerplate' pseudo-tag
+          that generates a html-boilerplate-like <html> tag
+          see http://html5boilerplate.com
+        
         2011-01-02
         * added HTML5 as doctype
         * changed AutoPrereqs in dist.ini to avoid deprecacy warning

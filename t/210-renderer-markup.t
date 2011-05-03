@@ -36,6 +36,7 @@ is(Catalyst::View::ByCode::Renderer::get_markup(), '', 'markup still empty');
 lives_ok { RUN() } 'RUN can get called';
 is(Catalyst::View::ByCode::Renderer::get_markup(), 'bla', 'markup contains template result');
 
+
 #
 # defining a block
 #
@@ -184,6 +185,29 @@ lives_ok { div(foo => 'bar') { $o } } 'adding an object markup lives';
 like(Catalyst::View::ByCode::Renderer::get_markup(), qr{\s*<div\s+foo="bar">
                                                               <hello>"world"</hello>
                                                         \s*</div>}xms, 'markup 12 looks good');
+
+
+#
+# boilerplate
+#
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 13 lives';
+boilerplate;
+is(Catalyst::View::ByCode::Renderer::get_markup(), 
+   '<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+</html>', 'boilerplate w/o content looks good');
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup 14 lives';
+boilerplate { div { 'bla' } };
+is(Catalyst::View::ByCode::Renderer::get_markup(), 
+   '<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<div>bla</div></html>', 'boilerplate w/ content looks good');
+
 
 
 done_testing();
