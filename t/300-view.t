@@ -113,6 +113,45 @@ lives_ok {$subref->()} 'calling wrap_template lives';
 like(Catalyst::View::ByCode::Renderer::get_markup(), 
      qr{<body>\s*<div\s+id="main">\s*Perl\s+rocks\s*</div>\s*</body>}xms, 'including markup looks good');
 
+#
+# redefining an included block inside a template fails up to 0.14
+#
+
+my $without_redefine;
+lives_ok {$without_redefine = $view->_compile_template($c, 'bug_block_inherit_template_without_block.pl')} 'compilation without template lives';
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup lives 1';
+lives_ok {$without_redefine->()} 'calling without lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{<h1><div\s+id="includable_block"><span>xxx\sunknown</span></div></h1>}xms, 'including "without" markup looks good');
+
+# as long as we have the bug, the block definition at this template's compile time
+# will overwrite the sub originally included.
+my $with_redefine;
+lives_ok {$with_redefine = $view->_compile_template($c, 'bug_block_inherit_template_with_block.pl')} 'compilation with template lives';
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup lives 2';
+lives_ok {$with_redefine->()} 'calling with lives';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{<h1><div>div</div></h1>}xms, 'including "with" markup looks good');
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup lives 3';
+lives_ok {$without_redefine->()} 'calling without lives again';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{<h1><div\s+id="includable_block"><span>xxx unknown</span></div></h1>}xms, 'including "without" markup looks good again');
+
+lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing markup lives 4';
+lives_ok {$with_redefine->()} 'calling with lives again';
+like(Catalyst::View::ByCode::Renderer::get_markup(), 
+     qr{<h1><div>div</div></h1>}xms, 'including "with" markup looks good again');
+
+isnt(*{'IncludeMe::includable'},
+     *{'Catalyst::Template::bug_block_inherit_template_with_block::includable'},
+     'redefinition changed original');
+
+
+
+
 ### TODO: test more kinds of 'yield()' usage.
 
 done_testing();
