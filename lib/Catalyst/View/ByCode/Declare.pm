@@ -242,10 +242,10 @@ sub install_sub {
     my $package = Devel::Declare::get_curstash_name;
 
     no strict 'refs';
-    #no warnings 'redefine';
+    no warnings 'redefine';
     ### deleting does not warn, but aliassing is still in action
     # http://www252.pair.com/comdog/mastering_perl/Chapters/08.symbol_tables.html
-    delete ${"$package\::"}{$sub_name};
+    # delete ${"$package\::"}{$sub_name};
     *{"$package\::$sub_name"} = $code;
     # cannot modify: *{"$package\::$sub_name"}{CODE} = $code;
     push @{"$package\::EXPORT"}, $sub_name;

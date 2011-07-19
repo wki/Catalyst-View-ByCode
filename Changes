@@ -1,5 +1,8 @@
 Revision history for Catalyst-View-ByCode
 
+        2011-07-19
+        * added HTML5 Tags which are not defined by HTML::Tagset
+
         2011-05-03
         * enabled objects that have a ->render() method to appear inside
           a template {} code block.

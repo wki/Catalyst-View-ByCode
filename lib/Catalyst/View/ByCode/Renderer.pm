@@ -26,6 +26,34 @@ our %EXPORT_TAGS = (
     default => [ @EXPORT ],
 );
 
+our @IS_KNOWN = (
+    # HTML5 tags not defined in HTML::Tagset
+    qw( article aside audio
+        canvas command
+        datalist details
+        figcaption figure footer
+        header hgroup
+        keygen
+        markup meter
+        nav
+        output 
+        progress
+        rt ruby
+        section source summary
+        time
+        video ),
+    grep { m{\A \w}xms }
+    keys(%HTML::Tagset::isKnown)
+);
+
+our %EMPTY_ELEMENT = (
+    (
+        map { ($_=>1) }
+        qw(source) ### FIXME: more needed!!!
+    ),
+    %HTML::Tagset::emptyElement
+);
+
 #
 # define variables -- get local() ized at certain positions
 #
@@ -129,7 +157,10 @@ sub overloaded_import {
         my %declare;
         
         foreach my $symbol (@{"$imported_package\::EXPORT_BLOCK"}) {
+            ### FIXME: aliasing makes trouble in case of overwriting !!!!!
             *{"$calling_package\::$symbol"} = *{"$imported_package\::$symbol"};
+            # *{"$calling_package\::$symbol"} = eval qq{ sub { goto $imported_package\::$symbol } };
+            # *{"$calling_package\::$symbol"} = eval qq{ sub { $imported_package\::$symbol(\@_) } };
             
             $declare{$symbol} = {
                 const => Catalyst::View::ByCode::Declare::tag_parser
@@ -257,7 +288,7 @@ sub _render {
                        ) .
                        
                        # closing tag or content?
-                       (exists($HTML::Tagset::emptyElement{$_->[0]})
+                       (exists($EMPTY_ELEMENT{$_->[0]})
                           ? ' />'
                           : '>' . 
                             _render(@{$_}[2 .. $#$_]) .
@@ -624,8 +655,7 @@ sub _construct_functions {
     my %declare;
     
     # tags with content are treated the same as tags without content
-    foreach my $tag_name (grep { m{\A \w}xms }
-                          keys(%HTML::Tagset::isKnown)) {
+    foreach my $tag_name (@IS_KNOWN) {
         my $sub_name = $change_tags{$tag_name}
             || $tag_name;
         
