@@ -126,6 +126,7 @@ sub parse_tag_declaration {
         # found '.' -- eliminate it and read name
         inject('',1);
         push @class, strip_name;
+        warn "Found Class: $class[-1]"; ### FIXME: remove me
     }
     if (scalar(@class)) {
         $extras .= " class => '" . join(' ', @class) . "',";
@@ -146,6 +147,7 @@ sub parse_tag_declaration {
     }
     
     if ($extras) {
+        warn "EXTRAS: $extras"; ### FIXME: remove me
         if (next_char eq '{') {
             # block present -- add after block
             inject_after_block($extras);
@@ -225,7 +227,9 @@ sub post_block_inject { # called from a BEGIN {} block at scope start
         my $linestr = Devel::Declare::get_linestr;
         my $offset = Devel::Declare::get_linestr_offset;
         
+        warn "post_block_inject, offset=$offset, linestr = '$linestr', inject='$inject'"; ### FIXME: remove me
         substr($linestr, $offset, 0) = $inject;
+        warn "AFTER, linestr='$linestr'";  ### FIXME: remove me
         Devel::Declare::set_linestr($linestr);
     };
 }

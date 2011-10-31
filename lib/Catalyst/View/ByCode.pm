@@ -1139,7 +1139,6 @@ sub _compile_template {
     }
     
     $c->log->debug('can run: ', $package->can($sub_name)) if $c->debug;
-    
     return $package->can($sub_name);
 }
 

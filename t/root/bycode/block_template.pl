@@ -23,7 +23,7 @@ block silly {
 template {
     b { 'before block' };
     
-    silly stupid.bad(xxx => 42) { 'just my 2 cent' };
+    silly stupid.bad ( xxx => 42 ) { 'just my 2 cent' };
     
     b { 'after block' };
 };

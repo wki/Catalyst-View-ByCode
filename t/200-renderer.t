@@ -98,7 +98,7 @@ lives_ok { Catalyst::View::ByCode::Renderer::PRINT(\1, $o) } 'PRINT object escap
 is(get_markup(), '<hello>"world"</hello>', 'escaped object markup looks good');
 
 clear_markup();
-lives_ok { Catalyst::View::ByCode::Renderer::PRINT(\o, $o) } 'PRINT object unescaped lives';
+lives_ok { Catalyst::View::ByCode::Renderer::PRINT(\0, $o) } 'PRINT object unescaped lives';
 is(get_markup(), '<hello>"world"</hello>', 'unescaped object markup looks good');
 
 
