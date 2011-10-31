@@ -84,10 +84,31 @@ sub strip_name {
 #
 sub strip_proto {
     if (next_char eq '(') {
+        warn "BEFORE strip proto O=$Offset, linestr='" . Devel::Declare::get_linestr . "'";
         my $length = Devel::Declare::toke_scan_str($Offset);
         my $proto = Devel::Declare::get_lex_stuff();
         Devel::Declare::clear_lex_stuff();
+        
+        # problem with perl-5.14:
+        # if $proto is multiline, $Offset and $length are wrong sometimes
+        if ($proto =~ m{\A .+ \n \s* ([^\n]+) \n? \z}xms) {
+            my $last_proto_line = $1;
+            my $real_len = length $last_proto_line;
+            my $pos = rindex(Devel::Declare::get_linestr, $last_proto_line);
+            if ($pos > 0) {
+                warn "pos=$pos, real_len=$real_len // Offset=$Offset, len=$length";
+                $length = $real_len + 1; # closing ')' must get cleared also
+                $Offset = $pos;
+            } else {
+                warn "NOT FOUND";
+            }
+        } else {
+            warn "NOT MULTILINE";
+        }
+        
+        warn "strip proto l=$length, O=$Offset, proto='$proto', linestr='" . Devel::Declare::get_linestr . "'";
         inject('', $length);
+        warn "AFTER strip proto l=$length, O=$Offset, proto='$proto', linestr='" . Devel::Declare::get_linestr . "'";
         return $proto;
     }
     return;
@@ -126,7 +147,7 @@ sub parse_tag_declaration {
         # found '.' -- eliminate it and read name
         inject('',1);
         push @class, strip_name;
-        warn "Found Class: $class[-1]"; ### FIXME: remove me
+        # warn "Found Class: $class[-1]"; ### FIXME: remove me
     }
     if (scalar(@class)) {
         $extras .= " class => '" . join(' ', @class) . "',";
@@ -171,9 +192,11 @@ sub inject {
     my $offset = shift || 0;
 
     my $linestr  = Devel::Declare::get_linestr;
+    # warn "inject: '$inject', before: '$linestr'";
     my $previous = substr($linestr, $Offset+$offset, $length);
     substr($linestr, $Offset+$offset, $length) = $inject;
     Devel::Declare::set_linestr($linestr);
+    # warn "inject: '$inject', after: '$linestr'";
     
     return $previous;
 }
