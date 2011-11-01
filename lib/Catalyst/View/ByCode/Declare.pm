@@ -91,6 +91,7 @@ sub strip_proto {
         
         # problem with perl-5.14:
         # if $proto is multiline, $Offset and $length are wrong sometimes
+        # this little stupid thing patches $Offset:
         if ($proto =~ m{\A .+ \n \s* ([^\n]+) \n? \z}xms) {
             my $last_proto_line = $1;
             my $real_len = length $last_proto_line;
