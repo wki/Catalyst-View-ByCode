@@ -369,7 +369,7 @@ latest open tag and sets or gets its attribute(s):
 
 =item block
 
-define a block that may be uses like a tag. If a block is defined in a
+define a block that may be used like a tag. If a block is defined in a
 package, it is automatically added to the package's C<@EXPORT> array.
 
     # define a block
@@ -384,8 +384,8 @@ package, it is automatically added to the package's C<@EXPORT> array.
         };
     };
     
-    # use a block like a tag
-    block some_id (href => 'http://bar.baz') {
+    # use the block like a tag
+    navitem some_id (href => 'http://bar.baz') {
         # this gets rendered by block_content() -- see above
         'some text or other content';
     }
