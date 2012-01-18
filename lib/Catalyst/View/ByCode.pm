@@ -422,15 +422,15 @@ class, each name written after a C<-> sign will be erased from the class.
 =item doctype
 
 a very simple way to generate a DOCTYPE declatation. Without any arguments, a
-HTML 4.0 doctype declaration will be generated. The arguments (if any) will
+HTML 5 doctype declaration will be generated. The arguments (if any) will
 consist of either of the words C<html> or C<xhtml> optionally followed by one
 or more version digits. The doctypes used are taken from
 L<http://hsivonen.iki.fi/doctype/>.
 
 some examples:
 
-    doctype;                # HTML 4.0
-    doctype 'html';         # HTML 4.01
+    doctype;                # HTML 5
+    doctype 'html';         # HTML 5
     doctype html => 4;      # HTML 4.01
     doctype 'html 4';       # HTML 4.01
     doctype 'html 4s';      # HTML 4.01 strict
