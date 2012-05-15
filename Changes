@@ -1,5 +1,9 @@
 Revision history for Catalyst-View-ByCode
 
+        2012-05-15
+        * removed a warning from a test. Ensured we work with
+          Perl-5.16.0-RC1
+
         2011-07-19
         * added HTML5 Tags which are not defined by HTML::Tagset
 
@@ -13,11 +17,11 @@ Revision history for Catalyst-View-ByCode
         * added a 'boilerplate' pseudo-tag
           that generates a html-boilerplate-like <html> tag
           see http://html5boilerplate.com
-        
+
         2011-01-02
         * added HTML5 as doctype
         * changed AutoPrereqs in dist.ini to avoid deprecacy warning
-        
+
         2011-01-20
         * allowed block_content() to forward arguments into the code-block called.
 
@@ -25,10 +29,10 @@ Revision history for Catalyst-View-ByCode
         * fixed a false escaping of render()'ed content from eg. FormFu
         * removed some typos
         * added more tests
-        
+
 0.13    2010-12-09
         * increased version number due to a CPAN upload problem
-        
+
 0.12    2010-12-08
         * complete rewrite of the whole rendering code
           using simple structures instead of Moose for performance
@@ -41,13 +45,13 @@ Revision history for Catalyst-View-ByCode
         * changed parameters transfered from process() to render() as
           actions with :Args() fail otherwise
         * added a test for this.
-         
+
         2010-04-08
         * added documentation
 
         2010-04-15
-        * $VERSION is now generated from Dist::Zilla 
-        
+        * $VERSION is now generated from Dist::Zilla
+
         2010-05-27
         * added a rudimentary html5 doctype
 
@@ -58,15 +62,15 @@ Revision history for Catalyst-View-ByCode
         * split up the process() method into render() and delivery to allow
           my $html = $c->forward('View::ByCode', render => [qw(list of files)]);
           without pollution of stash.
-        
+
         2010-03-31
         * added a handy shortcut for checked, disabled, multiple, readonly
-          and selected attributes rendering a true value to the 
+          and selected attributes rendering a true value to the
           attribute's name
           eg: disabled => 1 will become disabled="disabled" in HTML
         * added a params() sub that allows to specify a series of
           param tags with one call.
-        
+
         2010-03-29
         * fixed a bug that made block-definitions defined in 'old-scholl'
           fashion unable to read attr()-values. Only declare-defined
@@ -77,13 +81,13 @@ Revision history for Catalyst-View-ByCode
 
 0.09    2010-03-27
         * updated test requirements
-        
+
 0.08    2010-03-27
         * eliminated trunk/ directory
         * moved to Module::Install
         * fixed a test that failed on Windows because path separator
           was hard coded and wrong for this platform
-        
+
 0.07    2010-03-13
         * docs added, first CPAN upload
 
@@ -91,7 +95,7 @@ Revision history for Catalyst-View-ByCode
         * changed version to 0.06
         * updated META.yml, MANIFEST
         * added some docs
-        
+
         2010-03-02
         * added test for mixedCase and combined_name attribute keys
         * fixed doc typos, expanded docs
@@ -103,11 +107,11 @@ Revision history for Catalyst-View-ByCode
           class '+a selected'                is now: 'a selected uuu'
           class '-a' 'uuu'                   is now: 'selected'
           class '-selected +hui foo'         is now: 'foo hui'
-        
+
         2010-03-09
         * íntroduced stringification in Document for tag-content objects
         * used OUT/RAW/STDOUT in Renderer to avoid 'possible typo' warnings
-        
+
 0.05    2010-02-23
         * fixed a bug that made certain multiline prototype-like attributes fail
         * added a test to verify that
