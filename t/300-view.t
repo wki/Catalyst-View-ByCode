@@ -42,8 +42,11 @@ is($view->_template_to_package($c, 'simple_template'), 'Catalyst::Template::simp
 # test compilation
 #
 my $subref;
-lives_ok {$subref = $view->_compile_template($c, 'erroneous_template.pl') } 'compilation 1 lives';
-ok(!$subref, 'result of compilation is not a subref');
+{
+    local $SIG{__WARN__} = sub {};
+    lives_ok {$subref = $view->_compile_template($c, 'erroneous_template.pl') } 'compilation 1 lives';
+    ok(!$subref, 'result of compilation is not a subref');
+}
 
 lives_ok { $subref = $view->_compile_template($c, 'simple_template.pl') } 'compilation lives';
 is(ref($subref), 'CODE', 'compile result is a CODEref');
