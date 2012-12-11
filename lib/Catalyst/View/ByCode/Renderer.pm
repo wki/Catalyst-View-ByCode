@@ -680,6 +680,11 @@ sub _construct_functions {
                 
                 pop @top;
             }
+            
+            ### TODO: can we call _render() here and save text instead of a structure?
+            ###       would convert [ tag => {attr}, content ] to <tag attr>content</tag>
+            $top[-1] = _render($top[-1]);
+            
             return;
         };
         use strict 'refs';
