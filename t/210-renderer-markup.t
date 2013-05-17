@@ -208,8 +208,6 @@ is(Catalyst::View::ByCode::Renderer::get_markup(),
 <!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <div>bla</div></html>', 'boilerplate w/ content looks good');
 
-
-
 done_testing();
 
 # helper class for render test

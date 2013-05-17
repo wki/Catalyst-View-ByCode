@@ -36,7 +36,7 @@ our @IS_KNOWN = (
         keygen
         markup meter
         nav
-        output 
+        output
         progress
         rt ruby
         section source summary
@@ -91,39 +91,39 @@ our %change_tags = ('select' => 'choice',
 #
 sub import {
     my $module = shift; # eat off 'Catalyst::View::ByCode::Renderer';
-    
+
     my $calling_package = caller;
-    
+
     my $default_export = grep {$_ eq ':default'} @_;
-    
+
     #
     # do Exporter's Job on Catalyst::View::ByCode::Renderer's @EXPORT
     #
     $module->export_to_level(1, $module, grep {!ref $_} @_);
-    
-    # 
+
+    #
     # overwrite (or create) &import in calling_package which
     #   - auto-imports all block() directives
     #   - adds a Devel::Declare-setup for every block() directive
     #
     if ($default_export && !UNIVERSAL::can($calling_package, '_import')) {
         no strict 'refs';
-        
+
         # save original -- in doubt use Exporter::import
         local *_old_import = (*{"$calling_package\::import"}{CODE})
             ? *{"$calling_package\::import"}
             : *{"Exporter::import"};
-        
+
         *{"$calling_package\::_import"} = *_old_import;
         *{"$calling_package\::import"}  = \&overloaded_import;
     }
-    
+
     #
     # build HTML Tag-subs into caller's namespace
     #
     _construct_functions($calling_package)
         if ($default_export);
-    
+
     #
     # create *OUT and *RAW in calling package to allow 'print' to work
     #   'print OUT' works, Components use a 'select OUT' to allow 'print' alone
@@ -133,7 +133,7 @@ sub import {
         tie *{"$calling_package\::OUT"}, $module, 1; # escaped:   OUT
         tie *{"$calling_package\::RAW"}, $module, 0; # unescaped: RAW
         tie *{"$calling_package\::STDOUT"}, $module, 1; # escaped: STDOUT
-        
+
         # stupid hack to make -w happy ;-)
         my $dummy0 = *{"$calling_package\::OUT"};
         my $dummy1 = *{"$calling_package\::RAW"};
@@ -147,31 +147,31 @@ sub import {
 sub overloaded_import {
     my $imported_package = $_[0];
     my $calling_package = caller;
-    
+
     no strict 'refs';
-    
+
     if (scalar(@{"$imported_package\::EXPORT_BLOCK"})) {
         #
         # process every recorded block() directive
         #
         my %declare;
-        
+
         foreach my $symbol (@{"$imported_package\::EXPORT_BLOCK"}) {
             ### FIXME: aliasing makes trouble in case of overwriting !!!!!
             *{"$calling_package\::$symbol"} = *{"$imported_package\::$symbol"};
             # *{"$calling_package\::$symbol"} = eval qq{ sub { goto $imported_package\::$symbol } };
             # *{"$calling_package\::$symbol"} = eval qq{ sub { $imported_package\::$symbol(\@_) } };
-            
+
             $declare{$symbol} = {
                 const => Catalyst::View::ByCode::Declare::tag_parser
             };
         }
-        
+
         if (scalar(keys(%declare))) {
             Devel::Declare->setup_for($calling_package, \%declare);
         }
     }
-    
+
     #
     # proceed with the original import
     #
@@ -187,22 +187,22 @@ sub TIEHANDLE {
     my $handle = shift; # escaping on or off -- use this scalar as a handle
                         # and its value to decide escaping
                         # -- see PRINT below
-    
+
     return bless \$handle, $class;
 }
 
 sub PRINT {
     my $handle = shift;
-    
-    push @{$top[-1]}, 
-         map { 
+
+    push @{$top[-1]},
+         map {
              blessed($_) && $_->can('render')
              ? $_->render()
              : $$handle
-                 ? do { my $text = "$_"; 
+                 ? do { my $text = "$_";
                         $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                         $text; }
-                 : "$_" 
+                 : "$_"
          }
          @_;
     return;
@@ -224,7 +224,7 @@ sub clear_markup {
 
 sub init_markup {
     clear_markup();
-    
+
     $view  = shift;
     $c     = shift;
     $stash = $c && $c->can('stash')
@@ -236,26 +236,27 @@ sub get_markup { _render(@m) }
 
 sub _render {
     no warnings 'uninitialized'; # we might have undef sometimes
-    
+
     join ('',
          map {
              ref($_) eq 'ARRAY'
                # a Tag is [ 'tag', {attrs}, content, ... ]
                ? do {
                    my $attr = $_->[1];
+
                    $_->[0]
                      # tag structure is named => <tag ...>
                      ? "<$_->[0]" .
                        # render attribute(s)
-                       join('', 
+                       join('',
                             map {
                                 my $k = $_;
                                 my $v = $attr->{$k};
-                                
-                                if ($k eq 'disabled' || 
-                                    $k eq 'checked' || 
-                                    $k eq 'multiple' || 
-                                    $k eq 'readonly' || 
+
+                                if ($k eq 'disabled' ||
+                                    $k eq 'checked'  ||
+                                    $k eq 'multiple' ||
+                                    $k eq 'readonly' ||
                                     $k eq 'selected' ||
                                     $k eq 'required') {
                                     # special handling for magic names that require magic values
@@ -264,22 +265,22 @@ sub _render {
                                     # not a special attribute name
                                     if (ref $v) {
                                         # handle ref values differently
-                                        $v = ref($v) eq 'ARRAY' 
+                                        $v = ref($v) eq 'ARRAY'
                                              ? join(' ', @{$v})
-                                           : ref($v) eq 'HASH'  
-                                             ? join(';', 
-                                                    map { my $k = $_; 
-                                                          $k =~ s{([A-Z])|_}{-\l$1}oxmsg; 
+                                           : ref($v) eq 'HASH'
+                                             ? join(';',
+                                                    map { my $k = $_;
+                                                          $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
                                                           "$k:$v->{$_}" }
                                                     keys %{$v})
                                            : "$v";
                                     }
                                     $v =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
-                                    
+
                                     # convert key into dash-separaed version,
                                     # dataId -> data-id, data_id => data-id
                                     $k =~ s{([A-Z])|_}{-\l$1}oxmsg;
-                                    
+
                                     # compose attr="value"
                                     qq{ $k="$v"};
                                 }
@@ -287,18 +288,18 @@ sub _render {
                             sort # not needed but nice for testing/guessing
                             keys %{$attr}
                        ) .
-                       
+
                        # closing tag or content?
                        (exists($EMPTY_ELEMENT{$_->[0]})
                           ? ' />'
-                          : '>' . 
+                          : '>' .
                             _render(@{$_}[2 .. $#$_]) .
                             "</$_->[0]>")
-                     
+
                      # tag is unnamed -- just render content
                      : _render(@{$_}[2 .. $#$_])
                  }
-               
+
                # everything else is stringified
                : "$_"
          } @_);
@@ -310,14 +311,14 @@ sub _render {
 #
 sub template(&) {
     my $package = caller;
-    
+
     my $code = shift;
     no strict 'refs';
     *{"$package\::RUN"} = sub {
         push @{$top[-1]}, [ '', {} ];
-        
+
         push @top, $top[-1]->[-1];
-        
+
         my $text = $code->();
         if (ref($text) && UNIVERSAL::can($text, 'render')) {
             push @{$top[-1]}, $text->render;
@@ -326,11 +327,11 @@ sub template(&) {
             $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
             push @{$top[-1]}, $text;
         }
-        
+
         pop @top;
         return;
     };
-    
+
     return;
 }
 
@@ -340,29 +341,29 @@ sub template(&) {
 sub block($&;@) {
     my $name = shift;
     my $code = shift;
-    
+
     my $package = caller;
 
     no strict 'refs';
     no warnings 'redefine';
-    
+
     #
     # generate a sub in our namespace
     #
     *{"$package\::$name"} = sub(;&@) {
         local $block_content = $_[0];
-        
+
         push @{$top[-1]}, [ '', { @_[1 .. $#_] } ];
-        
+
         if ($code) {
             push @top, $top[-1]->[-1];
             push @{$top[-1]}, $code->();
             pop @top;
         }
-        
+
         return;
     };
-    
+
     #
     # mark this sub as a special exportable
     #
@@ -382,11 +383,11 @@ sub block_content {
 #
 sub params {
     my %params = @_;
-    
+
     while (my ($name, $value) = each %params) {
         push @{$top[-1]}, [ 'param', { name => $name, value => $value } ];
     }
-    
+
     return;
 }
 
@@ -403,31 +404,31 @@ sub params {
 #
 sub load {
     my $kind  = shift;
-    
+
     return if (!$kind || ref($kind));
 
     if ($kind eq 'css') {
         #
         # simple static CSS inserted just here and now
         #
-        push @{$top[-1]}, 
-             map { [ 'link', 
-                     { 
+        push @{$top[-1]},
+             map { [ 'link',
+                     {
                          rel => 'stylesheet',
                          type => 'text/css',
                          href => $_
-                     } 
+                     }
                    ] } @_;
     } elsif ($kind eq 'js') {
         #
         # simple static JS inserted just here and now
         #
-        push @{$top[-1]}, 
-             map { [ 'script', 
-                     { 
+        push @{$top[-1]},
+             map { [ 'script',
+                     {
                          type => 'text/javascript',
                          src => $_
-                     } 
+                     }
                    ] } @_;
     } elsif ((my $controller = $c->controller($kind)) &&
              ($kind eq 'Js' || $kind eq 'Css')) {
@@ -436,27 +437,27 @@ sub load {
         # some other kind of load operation we have a controller for
         #
         # $c->log->debug("LOAD: kind=$kind, ref(controller)=" . ref($controller));
-        
+
         if ($kind eq 'Css') {
-            push @{$top[-1]}, 
-                 [ 'link', 
+            push @{$top[-1]},
+                 [ 'link',
                    {
                        rel => 'stylesheet',
                        type => 'text/css',
                        href =>$c->uri_for($controller->action_for('default'), @_)
-                   } 
+                   }
                  ];
         } else {
-            push @{$top[-1]}, 
-                 [ 'script', 
-                   { 
+            push @{$top[-1]},
+                 [ 'script',
+                   {
                        type => 'text/javascript',
                        src => $c->uri_for($controller->action_for('default'), @_)
                    }
                  ];
         }
     }
-    
+
     return;
 }
 
@@ -473,7 +474,7 @@ sub load {
 #
 sub yield(;*@) {
     my $yield_name = shift || 'content';
-    
+
     $c->log->debug("yield '$yield_name' executing...") if ($c->debug);
 
     _yield(exists($c->stash->{yield}->{$yield_name})
@@ -487,7 +488,7 @@ sub yield(;*@) {
 # helper for recursive resolution
 sub _yield {
     my $thing = shift;
-    
+
     if (!$thing) {
         return;
     } elsif (ref($thing) eq 'ARRAY') {
@@ -509,7 +510,7 @@ sub _yield {
 #
 sub attr {
     return $top[-1]->[1]->{$_[0]} if (scalar(@_) == 1);
-    
+
     %{ $top[-1]->[1] } = ( %{ $top[-1]->[1] }, @_ );
     return;
 }
@@ -520,7 +521,7 @@ sub attr {
 sub class {
     my @args = @_
         or return;
-    
+
     #
     # class 'huhu';              - set 'huhu' (replacing previous name)
     # class 'huhu zzz';          - set 'huhu' and 'zzz' (replacing previous name/s)
@@ -533,10 +534,10 @@ sub class {
     # class qw(+foo -bar baz)    - same thing.
     #
     my $class_name = $top[-1]->[1]->{class} || '';
-    my %class = map {($_ => 1)} 
-                grep {$_} 
+    my %class = map {($_ => 1)}
+                grep {$_}
                 split(qr{\s+}xms, $class_name);
-    
+
     my $operation = 0; # -1 = sub, 0 = set, +1 = add
     foreach my $name (grep {length} map {split qr{\s+}xms} grep {!ref && defined && length} @args) {
         if ($name =~ s{\A([-+])}{}xms) {
@@ -551,9 +552,9 @@ sub class {
             $operation = +1;
         }
     }
-    
+
     $top[-1]->[1]->{class} = join(' ', sort keys(%class));
-    return; 
+    return;
 }
 
 #
@@ -609,7 +610,7 @@ sub doctype {
         xhtml1_trans => q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" } .
                         q{"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">},
     );
-    
+
     my $doctype = 'default';
     foreach my $d (@doctype_finder) {
         if ($kind =~ m{\A $d->[0]}xmsi) {
@@ -617,11 +618,13 @@ sub doctype {
             last;
         }
     }
-    
+
     push @{$top[-1]}, $doctype_for{$doctype};
 }
 
 sub boilerplate(;&) {
+    my $code = shift;
+
     push @{$top[-1]}, <<HTML;
 <!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
 <!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
@@ -629,8 +632,10 @@ sub boilerplate(;&) {
 <!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 HTML
 
-    $_[0]->() if ($_[0]);
-    
+    if ($code) {
+        $code->();
+    }
+
     push @{$top[-1]}, '</html>';
 }
 
@@ -650,26 +655,26 @@ sub nbsp { "\x{00a0}" } # bad hack in the moment...
 #
 sub _construct_functions {
     my $namespace  = shift;
-    
+
     no warnings 'redefine'; # in case of a re-compile.
-    
+
     my %declare;
-    
+
     # tags with content are treated the same as tags without content
     foreach my $tag_name (@IS_KNOWN) {
         my $sub_name = $change_tags{$tag_name}
             || $tag_name;
-        
+
         # install a tag-named sub in caller's namespace
         no strict 'refs';
         *{"$namespace\::$sub_name"} = sub (;&@) {
             push @{$top[-1]}, [ $tag_name, { @_[1 .. $#_] } ];
-            
+
             if ($_[0]) {
                 push @top, $top[-1]->[-1];
-                
+            
                 #### TODO: find out why ->render does not work for HTML::FormFu !!!
-                
+            
                 my $text = $_[0]->(@_);
                 if (ref($text) && UNIVERSAL::can($text, 'render')) {
                     push @{$top[-1]}, $text->render;
@@ -678,29 +683,29 @@ sub _construct_functions {
                     $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
                     push @{$top[-1]}, $text;
                 }
-                
+            
                 pop @top;
             }
-            
+
             ### TODO: can we call _render() here and save text instead of a structure?
             ###       would convert [ tag => {attr}, content ] to <tag attr>content</tag>
-            $top[-1] = _render($top[-1]);
-            
+            # $top[-1] = _render($top[-1]);
+
             return;
         };
         use strict 'refs';
-        
+
         # remember me to generate a magic tag-parser that applies extra magic
         $declare{$sub_name} = {
             const => Catalyst::View::ByCode::Declare::tag_parser
         };
     }
-    
+
     # add logic for block definitions
     $declare{block} = {
         const => Catalyst::View::ByCode::Declare::block_parser
     };
-    
+
     # install all tag-parsers collected above
     Devel::Declare->setup_for($namespace, \%declare);
 }
