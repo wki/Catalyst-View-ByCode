@@ -1,6 +1,6 @@
 Revision history for Catalyst-View-ByCode
 
-0.16    2013-05-11
+0.18    2013-05-11
         * added "requried" to the list of binary attributes that expand to
           required = "required" at rendering time.
 
@@ -8,7 +8,11 @@ Revision history for Catalyst-View-ByCode
         * removed a warning from a test. Ensured we work with
           Perl-5.16.0-RC1
 
-        2011-07-19
+0.17    2011-11-06
+        * bumped version of Devel::Declare to 0.006008
+          as earlier versions randomly behaved bad under Perl-5.14
+
+0.16    2011-07-19
         * added HTML5 Tags which are not defined by HTML::Tagset
 
         2011-05-03
