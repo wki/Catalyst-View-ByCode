@@ -256,7 +256,8 @@ sub _render {
                                     $k eq 'checked' || 
                                     $k eq 'multiple' || 
                                     $k eq 'readonly' || 
-                                    $k eq 'selected') {
+                                    $k eq 'selected' ||
+                                    $k eq 'required') {
                                     # special handling for magic names that require magic values
                                     $v ? qq{ $k="$k"} : '';
                                 } else {

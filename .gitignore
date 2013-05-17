@@ -10,3 +10,4 @@ Catalyst-View-ByCode*
 Catalyst-View-ByCode*/
 .build/
 cover_db/
+.DS_Store

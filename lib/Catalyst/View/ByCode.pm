@@ -844,7 +844,10 @@ correct markup. The examples below do not need futher explanation.
     input(disabled => 'disabled');
     
     input(checked => 1);
-    input(disabled => 'checked');
+    input(checked => 'checked');
+
+    input(required => 1);
+    input(required => 'required');
 
     option(selected => 1);
     option(selected => 'selected');

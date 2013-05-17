@@ -1,5 +1,9 @@
 Revision history for Catalyst-View-ByCode
 
+        2013-05-11
+        * added "requried" to the list of binary attributes that expand to
+          required = "required" at rendering time.
+
         2012-05-15
         * removed a warning from a test. Ensured we work with
           Perl-5.16.0-RC1
