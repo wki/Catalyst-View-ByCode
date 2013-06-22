@@ -19,5 +19,12 @@ like get('/simple_template'), qr{\s*<body>\s*<div\s+id="main">\s*Perl\s+rocks\s*
 ok request('/simple_template/foo/bar')->is_success, '/simple_template/foo/bar is callable.';
 like get('/simple_template/foo/bar'), qr{\s*<body>\s*<div\s+id="main">\s*Perl\s+rocks\s*</div>\s*</body>\s*}xms, '/simple_template/foo/bar result is correct';
 
+# ensure we transport unicode characters correct
+ok request('/unicode_output')->is_success, '/unicode_output is callable.';
+like get('/unicode_output'), qr{\s*<body>\s*<div\s+id="main">\s*static:\s&#246\s*</div>\s*</body>\s*}xms, '/unicode_output static result is correct';
+
+like get("/unicode_output?input=\x{2002}"), qr{\s*<body>\s*<div\s+id="main">\s*static:\s&#2002\s*</div>\s*</body>\s*}xms, '/unicode_output get-param is correct';
+
+# TODO: use catalyst builtin plugin
 
 done_testing();

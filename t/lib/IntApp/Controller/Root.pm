@@ -17,4 +17,10 @@ sub simple_template :Local :Args {
     $c->forward('View::ByCode');
 }
 
+sub unicode_output :Local :Args {
+    my ( $self, $c ) = @_;
+    
+    $c->forward('View::ByCode');
+}
+
 1;
