@@ -29,18 +29,19 @@ our %EXPORT_TAGS = (
 our @IS_KNOWN = (
     # HTML5 tags not defined in HTML::Tagset
     qw( article aside audio
-        canvas command
-        datalist details
+        bdi bdo
+        canvas
+        data datalist details dialog
         figcaption figure footer
-        header hgroup
+        header
         keygen
-        markup meter
+        main mark markup menu menuitem meter
         nav
         output
         progress
-        rt ruby
+        rd rp rt ruby
         section source summary
-        time
+        time track
         video ),
     grep { m{\A \w}xms }
     keys(%HTML::Tagset::isKnown)
@@ -255,6 +256,8 @@ sub _render {
 
                                 if ($k eq 'disabled' ||
                                     $k eq 'checked'  ||
+                                    $k eq 'hidden'   ||
+                                    $k eq 'inert'    ||
                                     $k eq 'multiple' ||
                                     $k eq 'readonly' ||
                                     $k eq 'selected' ||

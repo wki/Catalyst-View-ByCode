@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+0.19    2013-06-22
+        * added HTML-5 tags and boolean attributes. Fixes github issues
+          #1 and #2. Issues reported by Phil Soehnlein
+        * reformatted tests to use "use ok" and all test methods without ()
+
 0.18    2013-05-11
         * added "requried" to the list of binary attributes that expand to
           required = "required" at rendering time.

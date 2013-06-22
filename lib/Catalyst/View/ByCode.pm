@@ -859,6 +859,9 @@ correct markup. The examples below do not need futher explanation.
     choice(multiple => 1);
     choice(multiple => 'multiple');
 
+beside these examples all currently defined HTML-5 boolean attributes are
+available: disabled, checked, hidden, inert, multiple, readonly, selected,
+required.
 
 =head1 METHODS
 
