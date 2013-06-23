@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+        2013-06-23
+        * tidied up some tests. tried to figure out an observed oddity
+          in combination with Plugin::Unicode::Encoding, but tests behave
+          different from started app.
+
 0.19    2013-06-22
         * added HTML-5 tags and boolean attributes. Fixes github issues
           #1 and #2. Issues reported by Phil Soehnlein

@@ -23,8 +23,10 @@ like get('/simple_template/foo/bar'), qr{\s*<body>\s*<div\s+id="main">\s*Perl\s+
 ok request('/unicode_output')->is_success, '/unicode_output is callable.';
 like get('/unicode_output'), qr{\s*<body>\s*<div\s+id="main">\s*static:\s&#246\s*</div>\s*</body>\s*}xms, '/unicode_output static result is correct';
 
-like get("/unicode_output?input=\x{2002}"), qr{\s*<body>\s*<div\s+id="main">\s*static:\s&#2002\s*</div>\s*</body>\s*}xms, '/unicode_output get-param is correct';
+like get("/unicode_output?input=foo\x{2002}bar"), qr{\s*<body>\s*<div\s+id="main">\s*foo&#2002bar\s*</div>\s*</body>\s*}xms, '/unicode_output get-param is correct';
 
-# TODO: use catalyst builtin plugin
+
+# raw output cannot get tested because under test conditions, conversions
+# behave wrong.
 
 done_testing();

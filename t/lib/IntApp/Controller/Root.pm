@@ -1,7 +1,6 @@
 package IntApp::Controller::Root;
-use strict;
-use warnings;
-use parent 'Catalyst::Controller';
+use Moose;
+BEGIN { extends 'Catalyst::Controller' }
 
 __PACKAGE__->config(namespace => '');
 
