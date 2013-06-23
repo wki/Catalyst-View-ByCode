@@ -1,15 +1,16 @@
-package IntApp;
+package UniApp;
 
 use Moose;
 extends 'Catalyst';
 
-use Catalyst::Runtime '5.80';
+use Catalyst::Runtime '5.90040'; # unicode plugin is included since then
 use FindBin;
 
 use Catalyst; # ( qw(-Log=error) );
 
 __PACKAGE__->config(
-    name           => 'IntApp',
+    name           => 'UniApp',
+    encoding       => 'UTF-8',
     default_view   => 'ByCode',
     home           => "$FindBin::Bin",
     'View::ByCode' => { 
