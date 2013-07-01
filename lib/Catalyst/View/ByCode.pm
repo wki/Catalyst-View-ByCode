@@ -1144,9 +1144,12 @@ sub _compile_template {
         $self->__compile($c, $full_path => $package);
     }
     
-    $c->log->debug('can run: ', $package->can($sub_name)) if $c->debug;
+    # important: must stringify method to avoid Log::Log4perl::Catalyst
+    #            to call it.
+    my $method = $package->can($sub_name);
+    $c->log->debug("can run: $method") if $c->debug;
     
-    return $package->can($sub_name);
+    return $method;
 }
 
 # low level compile

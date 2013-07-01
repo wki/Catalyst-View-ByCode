@@ -1,5 +1,12 @@
 Revision history for Catalyst-View-ByCode
 
+0.20    2013-07-01
+        * changed all calls to any logging method containing coderefs to
+          stringified contents. Log::Log4perl::Catalyst calls coderefs instead
+          of printing them.
+        * added 3 more boolean attributes specified in HTML5:
+          autofocus, novalidate and formnovalidate. Thanks again, Phil.
+
 0.19    2013-06-22
         * added HTML-5 tags and boolean attributes. Fixes github issues
           #1 and #2. Issues reported by Phil Soehnlein
