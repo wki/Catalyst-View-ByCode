@@ -1,5 +1,9 @@
 Revision history for Catalyst-View-ByCode
 
+0.21    2013-07-03
+        * stop depending on deprecated MooseX::AttributeHelpers
+          Fixes RT#86642 -- Thanks, Karen Etheridge
+
 0.20    2013-07-01
         * changed all calls to any logging method containing coderefs to
           stringified contents. Log::Log4perl::Catalyst calls coderefs instead
