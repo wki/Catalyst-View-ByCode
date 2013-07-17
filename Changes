@@ -1,5 +1,10 @@
 Revision history for Catalyst-View-ByCode
 
+0.22    2013-07-17
+        * scalar refs inside markup are not escaped by intention. This avoids
+          calling `print RAW 'string';` by simply using `\'string'`;
+          Feature wanted by Phil Söhnlein.
+
 0.21    2013-07-03
         * stop depending on deprecated MooseX::AttributeHelpers
           Fixes RT#86642 -- Thanks, Karen Etheridge

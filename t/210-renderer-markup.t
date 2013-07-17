@@ -206,7 +206,17 @@ is Catalyst::View::ByCode::Renderer::get_markup(),
 <!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <div>bla</div></html>', 'boilerplate w/ content looks good';
 
-done_testing();
+
+#
+# scalar refs inside tags do not escape
+#
+lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 14 lives';
+div { \'<foo & bar>' };
+is Catalyst::View::ByCode::Renderer::get_markup(),
+    '<div><foo & bar></div>',
+    'scalar ref is not escaped';
+
+done_testing;
 
 # helper class for render test
 {

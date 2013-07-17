@@ -682,8 +682,10 @@ sub _construct_functions {
                 #### TODO: find out why ->render does not work for HTML::FormFu !!!
             
                 my $text = $_[0]->(@_);
-                if (ref($text) && UNIVERSAL::can($text, 'render')) {
+                if (ref $text && UNIVERSAL::can($text, 'render')) {
                     push @{$top[-1]}, $text->render;
+                } elsif (ref $text eq 'SCALAR') {
+                    push @{$top[-1]}, $$text;
                 } else {
                     no warnings 'uninitialized'; # we might see undef values
                     $text =~ s{($NEED_ESCAPE)}{'&#' . ord($1) . ';'}oexmsg;
