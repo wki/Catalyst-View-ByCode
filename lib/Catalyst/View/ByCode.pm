@@ -311,6 +311,19 @@ produces the same result as C<attr onhandler => 'some javascript code'>
 
 C<marginTop> or C<margin_top> will get converted to C<margin-top>.
 
+=item handling scalar refs
+
+    div (data_something => \'<abcd>') { ... };
+
+will not escape the ref-text <abcd>.
+
+=item code refs
+
+    div (id => \&get_next_id) { ... };
+
+will call get_next_id() and set its return value as a value for id and in case
+of special characters, escapes it.
+
 =back
 
 Every attribute may have almost any datatype you might think of:

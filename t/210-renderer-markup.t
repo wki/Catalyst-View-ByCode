@@ -210,11 +210,32 @@ is Catalyst::View::ByCode::Renderer::get_markup(),
 #
 # scalar refs inside tags do not escape
 #
-lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 14 lives';
+lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 15 lives';
 div { \'<foo & bar>' };
 is Catalyst::View::ByCode::Renderer::get_markup(),
     '<div><foo & bar></div>',
     'scalar ref is not escaped';
+
+#
+# scalar refs do not escape
+#
+lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 16 lives';
+div ( class => \'<abc & def>' ) { 'foo' };
+is Catalyst::View::ByCode::Renderer::get_markup(),
+    '<div class="<abc & def>">foo</div>',
+    'scalar ref is expanded';
+
+#
+# code refs inside attributes do expand correctly
+#
+sub give_content { '"abc" def' }
+
+lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 17 lives';
+div ( class => \&give_content ) { 'bar' };
+is Catalyst::View::ByCode::Renderer::get_markup(),
+    '<div class="&#34;abc&#34; def">bar</div>',
+    'code ref is expanded';
+
 
 done_testing;
 
