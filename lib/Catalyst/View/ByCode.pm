@@ -4,11 +4,11 @@ use Moose;
 extends 'Catalyst::View';
 with 'Catalyst::Component::ApplicationAttribute';
 
-has extension => (is => 'rw', default => '.pl');
-# has root_dir  => (is => 'rw', default => sub { $_[0]->_application->path_to('root/bycode') });
-has root_dir  => (is => 'rw', default => 'root/bycode');
-has wrapper   => (is => 'rw', default => 'wrapper.pl');
-has include   => (is => 'rw', default => sub { [] });
+has extension    => (is => 'rw', default => '.pl');
+has root_dir     => (is => 'rw', default => 'root/bycode');
+has wrapper      => (is => 'rw', default => 'wrapper.pl');
+has include      => (is => 'rw', default => sub { [] });
+has content_type => (is => 'rw', default => 'text/html ; charset=utf-8');
 
 # Config Options:
 #    root_dir => 'bycode',
@@ -1041,7 +1041,8 @@ sub process {
     my $self = shift;
     my $c = shift;
     
-    $c->response->body( $self->render($c) );
+    $c->response->content_type($self->content_type);
+    $c->response->body($self->render($c));
     
     return 1; # indicate success
 }
