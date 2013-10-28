@@ -1,5 +1,12 @@
 Revision history for Catalyst-View-ByCode
 
+0.24    2013-10-28
+        * allowed dash-separated names to appear for class and id names,
+          enabling div my-id.some-class { ... }
+
+0.23    2013-09-19
+        * added a content type for delivery to Catalyst > 5.90040
+
 0.22    2013-07-17
         * scalar refs inside markup are not escaped by intention. This avoids
           calling `print RAW 'string';` by simply using `\'string'`;

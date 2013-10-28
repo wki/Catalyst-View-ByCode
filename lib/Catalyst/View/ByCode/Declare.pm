@@ -74,9 +74,22 @@ sub strip_name {
     skip_space;
     
     if (my $length = Devel::Declare::toke_scan_word($Offset, 1)) {
-        return inject('',$length);
+        return inject('', $length);
     }
     return;
+}
+
+#
+# destructively read a possibly dash-separated name
+#
+sub strip_css_name {
+    my $name = strip_name;
+    while (next_char eq '-') {
+        inject('',1);
+        $name .= '-' . strip_name;
+    }
+    
+    return $name;
 }
 
 #
@@ -116,7 +129,7 @@ sub parse_tag_declaration {
     # check for an indentifier (ID)
     if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
         # looks like an ID
-        my $name = strip_name;
+        my $name = strip_css_name;
         $extras .= " id => '$name',";
     }
     
@@ -125,7 +138,7 @@ sub parse_tag_declaration {
     while (next_char eq '.') {
         # found '.' -- eliminate it and read name
         inject('',1);
-        push @class, strip_name;
+        push @class, strip_css_name;
     }
     if (scalar(@class)) {
         $extras .= " class => '" . join(' ', @class) . "',";

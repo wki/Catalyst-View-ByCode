@@ -1,3 +1,3 @@
 template {
-    div main { 'Perl rocks' };
+    div main.bad-class-name { 'Perl rocks' };
 };

@@ -63,7 +63,7 @@ lives_ok {Catalyst::View::ByCode::Renderer::init_markup()} 'initing simple marku
 lives_ok {$subref->()} 'calling simple_template lives';
 like Catalyst::View::ByCode::Renderer::get_markup(), 
      qr{\s*
-        <div\s+id="main">\s*Perl\s+rocks\s*</div>\s*
+        <div\s+class="bad-class-name"\s+id="main">\s*Perl\s+rocks\s*</div>\s*
         \s*}xms, 
      'simple markup looks OK';
 
@@ -114,7 +114,7 @@ lives_ok {$subref = $view->_compile_template($c, 'wrap_template.pl')} 'compilati
 is ref $subref, 'CODE', 'compile wrapping result is a CODEref';
 lives_ok {$subref->()} 'calling wrap_template lives';
 like Catalyst::View::ByCode::Renderer::get_markup(), 
-     qr{<body>\s*<div\s+id="main">\s*Perl\s+rocks\s*</div>\s*</body>}xms, 
+     qr{<body>\s*<div\s+class="bad-class-name"\s+id="main">\s*Perl\s+rocks\s*</div>\s*</body>}xms, 
      'including markup looks good';
 
 #
