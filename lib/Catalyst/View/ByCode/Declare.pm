@@ -85,8 +85,11 @@ sub strip_name {
 sub strip_css_name {
     my $name = strip_name;
     while (next_char eq '-') {
-        inject('',1);
-        $name .= '-' . strip_name;
+        inject('', 1);
+        $name .= '-';
+        if (next_char =~ m{\A[a-zA-Z0-9_]}xms) {
+            $name .= strip_name;
+        }
     }
     
     return $name;
