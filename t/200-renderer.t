@@ -42,6 +42,9 @@ is get_markup(), 'foo<div>abc</div>bar', 'concatenating a tag works' ;
 @Catalyst::View::ByCode::Renderer::m = ( 'foo', [ 'div', {bla => 'blubb'}, 'a', 'b', 'c' ], 'bar' );
 is get_markup(), 'foo<div bla="blubb">abc</div>bar', 'concatenating a tag w/ attribute works' ;
 
+@Catalyst::View::ByCode::Renderer::m = ( 'foo', [ 'div', {'<%= "bla" %>' => undef}, 'a', 'b', 'c' ], 'bar' );
+is get_markup(), 'foo<div <%= "bla" %>>abc</div>bar', 'concatenating a tag w/ attribute works' ;
+
 @Catalyst::View::ByCode::Renderer::m = ( 'foo', [ 'div', {bla => 'blubb', z => 999}, 'a', 'b', 'c' ], 'bar' );
 is get_markup(), 'foo<div bla="blubb" z="999">abc</div>bar', 'concatenating a tag w/ attributes works' ;
 
