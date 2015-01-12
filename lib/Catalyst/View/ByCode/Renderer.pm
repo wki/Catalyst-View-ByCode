@@ -254,7 +254,9 @@ sub _render {
                                 my $k = $_;
                                 my $v = $attr->{$k};
 
-                                if ($k eq 'autofocus'      ||
+                                if (!defined $v) {
+                                    " $k";
+                                } elsif ($k eq 'autofocus'      ||
                                     $k eq 'checked'        ||
                                     $k eq 'disabled'       ||
                                     $k eq 'formnovalidate' ||
@@ -521,8 +523,11 @@ sub _yield {
 # get/set attribute(s) of latest open tag
 #
 sub attr {
-    return $top[-1]->[1]->{$_[0]} if (scalar(@_) == 1);
+    # FIXME: better discovery of set/get !defined wantarray (?)
+    
+    return $top[-1]->[1]->{$_[0]} if scalar @_ == 1 && defined wantarray;
 
+    no warnings; # avoid odd no of elements in hash
     %{ $top[-1]->[1] } = ( %{ $top[-1]->[1] }, @_ );
     return;
 }

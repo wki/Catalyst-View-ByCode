@@ -236,6 +236,14 @@ is Catalyst::View::ByCode::Renderer::get_markup(),
     '<div class="&#34;abc&#34; def">bar</div>',
     'code ref is expanded';
 
+# usage of attr with one argument
+lives_ok { Catalyst::View::ByCode::Renderer::init_markup() } 'initing markup 18 lives';
+div ( class => 'foo' ) { attr '<%= baaah %>'; 'bar' };
+is Catalyst::View::ByCode::Renderer::get_markup(),
+    '<div <%= baaah %> class="foo">bar</div>',
+    'attr sets additional content inside tag';
+
+
 
 done_testing;
 
