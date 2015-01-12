@@ -13,6 +13,31 @@ my $c = Catalyst->new();
 $c->setup_log();
 $c->setup_home("$FindBin::Bin");
 
+{
+    # patch our Catalyst environment for testing
+    package Catalyst;
+    my %stash;
+    use Moose;
+    no warnings;
+    __PACKAGE__->meta->make_mutable;
+    sub stash {
+        my $self = shift;
+        while (@_) {
+            my $key = shift;
+            my $value = shift;
+            $stash{$key} = $value;
+        }
+        
+        return \%stash;
+    }
+    around dispatch => sub {
+        my $orig = shift;
+        %stash = ();
+        $orig->dispatch(@_);
+    };
+    __PACKAGE__->meta->make_immutable;
+}
+
 # check for methods
 can_ok 'Catalyst::View::ByCode' => qw(extension root_dir wrapper include process);
 

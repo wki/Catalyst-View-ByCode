@@ -1,12 +1,9 @@
 package TestApp;
-
 use Moose;
+use FindBin;
 extends 'Catalyst';
 
-use Catalyst::Runtime '5.80';
-use FindBin;
-
-use Catalyst ( qw(-Log=error) );
+# use Catalyst ( qw(-Log=error) );
 
 __PACKAGE__->config(
         name => 'TestApp',
