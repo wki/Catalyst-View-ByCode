@@ -1,10 +1,7 @@
 language: perl
 
 perl:
-<<<<<<< HEAD
    - "5.20"
-=======
->>>>>>> 9c4ebff0a03b3e9cb2bd0dfedcd9253712d91604
    - "5.18"
    - "5.16"
    - "5.14"
