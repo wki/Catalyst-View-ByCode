@@ -5,48 +5,16 @@ use Catalyst ();
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Path::Class;
+use MockCatalyst;
 
 use ok 'Catalyst::View::ByCode';
 
-# setup our Catalyst :-)
-my $c = Catalyst->new();
-$c->setup_log();
-$c->setup_home("$FindBin::Bin");
+# setup
+my $c = MockCatalyst->new(
+	root_dir => $FindBin::Bin,
+);
+my $view = Catalyst::View::ByCode->COMPONENT($c);
 
-{
-    # patch our Catalyst environment for testing
-    package Catalyst;
-    my %stash;
-    use Moose;
-    no warnings;
-    __PACKAGE__->meta->make_mutable;
-    sub stash {
-        my $self = shift;
-        while (@_) {
-            my $key = shift;
-            my $value = shift;
-            $stash{$key} = $value;
-        }
-        
-        return \%stash;
-    }
-    around dispatch => sub {
-        my $orig = shift;
-        %stash = ();
-        $orig->dispatch(@_);
-    };
-    __PACKAGE__->meta->make_immutable;
-}
-
-# check for methods
-can_ok 'Catalyst::View::ByCode' => qw(extension root_dir wrapper include process);
-
-# instantiate
-my $view;
-lives_ok { $view = $c->setup_component('Catalyst::View::ByCode') } 'setup view worked';
-isa_ok $view, 'Catalyst::View::ByCode', 'view class looks good';
-
-### test only ::: $view->_application->path_to('root'), 'adsf', 'bla' ;
 # check default attributes
 is $view->extension, '.pl', 'extension looks good' ;
 is $view->root_dir,  'root/bycode', 'root_dir looks good' ;

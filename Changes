@@ -1,5 +1,9 @@
 Revision history for Catalyst-View-ByCode
 
+0.27    2015-06-05
+        * added MockCatalyst class to circumvent different setup from latest
+          Catalyst releases resultung in test errors
+
 0.26    2015-01-12
         * added a mocked $c->stash() method to make failing tests work again
 

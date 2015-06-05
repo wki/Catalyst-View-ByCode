@@ -5,19 +5,15 @@ use Catalyst ();
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Path::Class;
+use MockCatalyst;
 
 use ok 'Catalyst::View::ByCode';
 
-# setup our Catalyst :-)
-my $c = Catalyst->new();
-$c->setup_log();
-$c->setup_home("$FindBin::Bin");
-
-
-# instantiate a view
-my $view;
-lives_ok { $view = $c->setup_component('Catalyst::View::ByCode') } 'setup view worked';
-isa_ok($view, 'Catalyst::View::ByCode', 'view class looks good');
+# setup
+my $c = MockCatalyst->new(
+	root_dir => $FindBin::Bin,
+);
+my $view = Catalyst::View::ByCode->COMPONENT($c);
 
 # check against the bug: _compile_template fails
 my $subref = 1234;
